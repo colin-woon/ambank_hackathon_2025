@@ -5,9 +5,11 @@ import { useState } from 'react';
 export default function IssuesPage() {
 	const [showForm, setShowForm] = useState(false);
 	const [title, setTitle] = useState('');
+	const [issues, setIssues] = useState([]);
 	const [description, setDescription] = useState('');
 	const [feedbackMessage, setFeedbackMessage] = useState('');
 	const [feedbackType, setFeedbackType] = useState('');
+
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
@@ -22,6 +24,14 @@ export default function IssuesPage() {
 		}
 		console.log('Submitted issue:');
 		console.log({ title, description });
+
+		const newIssue = {
+			title,
+			description,
+			date: new Date().toLocaleString() // 📅 adds human-readable date
+		};
+		setIssues([...issues, newIssue]);
+
 		setFeedbackMessage('Issue submitted successfully!');
 		setFeedbackType('success');
 		setTitle('');
@@ -36,7 +46,7 @@ export default function IssuesPage() {
 
 	return (
 		<div style={{ padding: '2rem' }}>
-			<h1>Issues Page</h1>
+			<h1>Data Quality Control Dashboard</h1>
 
 			<button
 				onClick={() => setShowForm(true)}
@@ -51,7 +61,30 @@ export default function IssuesPage() {
 			>
 				+ Report New Issue
 			</button>
-
+			<div style={{ marginTop: '2rem' }}>
+				{issues.length === 0 ? (
+					<p style={{ marginTop: '2rem' }}>No issues submitted yet.</p>
+				) : (
+					<table style={{ width: '100%', marginTop: '2rem', borderCollapse: 'collapse' }}>
+						<thead>
+							<tr>
+								<th style={{ borderBottom: '2px solid #ccc', textAlign: 'left', padding: '0.5rem' }}>Ref No.</th>
+								<th style={{ borderBottom: '2px solid #ccc', textAlign: 'left', padding: '0.5rem' }}>Title</th>
+								<th style={{ borderBottom: '2px solid #ccc', textAlign: 'left', padding: '0.5rem' }}>Date Created</th>
+							</tr>
+						</thead>
+						<tbody>
+							{issues.map((issue, index) => (
+								<tr key={issue.id}>
+									<td style={{ borderBottom: '1px solid #eee', padding: '0.5rem' }}>{index + 1}</td>
+									<td style={{ borderBottom: '1px solid #eee', padding: '0.5rem' }}>{issue.title}</td>
+									<td style={{ borderBottom: '1px solid #eee', padding: '0.5rem' }}>{issue.date}</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				)}
+			</div>
 			{showForm && (
 				<div style={{
 					position: 'fixed',
