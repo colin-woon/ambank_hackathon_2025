@@ -28,8 +28,17 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
   useEffect(() => {
     if (issue) {
       setFormData({ ...issue })
+    } else {
+      setFormData(null)
     }
   }, [issue])
+
+  // Reset form data when modal is closed
+  useEffect(() => {
+    if (!isOpen && issue) {
+      setFormData({ ...issue })
+    }
+  }, [isOpen, issue])
 
   if (!issue || !formData) return null
 
@@ -109,7 +118,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="!w-full !max-w-[50vw] px-8 py-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span className="text-red-700">
