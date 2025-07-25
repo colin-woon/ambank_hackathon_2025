@@ -28,8 +28,17 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
   useEffect(() => {
     if (issue) {
       setFormData({ ...issue })
+    } else {
+      setFormData(null)
     }
   }, [issue])
+
+  // Reset form data when modal is closed
+  useEffect(() => {
+    if (!isOpen && issue) {
+      setFormData({ ...issue })
+    }
+  }, [isOpen, issue])
 
   if (!issue || !formData) return null
 
