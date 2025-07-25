@@ -9,6 +9,7 @@ import { Plus, Users, Kanban } from "lucide-react"
 import { CreateIssueModal } from "@/components/create-issue-modal"
 import { IssueModal } from "@/components/issue-modal"
 import type { Issue } from "@/types/issue"
+import Login from "@/components/login"
 
 // Mock data for demonstration
 const mockIssues: Issue[] = [
@@ -108,10 +109,13 @@ const mockIssues: Issue[] = [
 ]
 
 export default function HomePage() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [issues, setIssues] = useState<Issue[]>(mockIssues)
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false)
+
+  if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />
 
   const handleCreateIssue = (newIssue: Omit<Issue, "id" | "createdAt">) => {
     const issue: Issue = {
