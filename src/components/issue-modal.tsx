@@ -13,6 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Bot, Calendar, Clock, Target, Zap } from "lucide-react"
+import { calculateDeadlineFromScore } from "@/lib/utils"
+import { addWorkingDays } from "@/lib/utils"
 
 interface IssueModalProps {
   issue: Issue | null
@@ -20,6 +22,15 @@ interface IssueModalProps {
   onClose: () => void
   onUpdate: (issue: Issue) => void
 }
+
+function getWorkingDaysFromScore(score: number): number {
+	if (score <= 4) return 15
+	if (score <= 8) return 30
+	if (score <= 12) return 60
+	if (score <= 15) return 90
+	return 120
+}
+
 
 export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps) {
   const [formData, setFormData] = useState<Issue | null>(null)
@@ -39,6 +50,22 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
       setFormData({ ...issue })
     }
   }, [isOpen, issue])
+
+  useEffect(() => {
+    if (!formData) return
+
+    const { aiSuggestions, assignedAt } = formData
+
+    if (aiSuggestions?.impactScore && aiSuggestions?.complexityScore) {
+      const totalScore = aiSuggestions.impactScore + aiSuggestions.complexityScore
+      const updatedDeadline = calculateDeadlineFromScore(totalScore, assignedAt || new Date())
+
+      setFormData((prev) =>
+        prev ? { ...prev, deadline: updatedDeadline } : null
+      )
+    }
+  }, [formData?.aiSuggestions?.impactScore, formData?.aiSuggestions?.complexityScore, formData?.assignedAt])
+
 
   if (!issue || !formData) return null
 
@@ -65,9 +92,15 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
       else mockAIResults.suggestedPriority = "Low"
 
       // Calculate deadline based on score
-      const daysToAdd = mockAIResults.totalScore <= 4 ? 15 : mockAIResults.totalScore <= 8 ? 30 : 60
-      const newDeadline = new Date()
-      newDeadline.setDate(newDeadline.getDate() + daysToAdd)
+      let daysToAdd = 15
+      const score = mockAIResults.totalScore
+      if (score >= 5 && score <= 8) daysToAdd = 30
+      else if (score >= 9 && score <= 12) daysToAdd = 60
+      else if (score >= 13 && score <= 15) daysToAdd = 90
+      else if (score > 15) daysToAdd = 120
+
+const newDeadline = addWorkingDays(new Date(), daysToAdd)
+
 
       setFormData((prev) =>
         prev
@@ -86,6 +119,10 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
 
   const handleSave = () => {
     if (formData) {
+      if (formData.assignedAt < formData.createdAt) {
+        alert("Assigned date cannot be before Created date.")
+        return
+      }
       onUpdate(formData)
       onClose()
     }
@@ -145,7 +182,13 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     <Label>Status</Label>
                     <Select
                       value={formData.status}
-                      onValueChange={(value: Issue["status"]) => handleInputChange("status", value)}
+                      onValueChange={(value: Issue["status"]) => {
+                        if (formData.status === "new" && value === "in_progress" && !formData.assignedAt) {
+                          const today = new Date()
+                          handleInputChange("assignedAt", today)
+                        }
+                        handleInputChange("status", value)
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -159,6 +202,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                       </SelectContent>
                     </Select>
                   </div>
+
 
                   <div>
                     <Label>Priority</Label>
@@ -382,36 +426,69 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     </>
                   )}
                 </Button>
-
-                {formData.aiSuggestions && (
-                  <div className="space-y-3">
-                    <Separator />
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">{formData.aiSuggestions.impactScore}</div>
-                        <div className="text-xs text-blue-700">Impact Score</div>
-                      </div>
-                      <div className="text-center p-3 bg-purple-50 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-600">
-                          {formData.aiSuggestions.complexityScore}
+                  {formData.aiSuggestions && (
+                    <div className="space-y-3">
+                      <Separator />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="text-center p-3 bg-blue-50 rounded-lg">
+                          <Input
+                            type="number"
+                            min={4}
+                            max={12}
+                            value={formData.aiSuggestions.impactScore}
+                            onChange={(e) => {
+                              const newScore = parseInt(e.target.value) || 0
+                              const newTotal = newScore + (formData.aiSuggestions?.complexityScore || 0)
+                              handleInputChange("aiSuggestions", {
+                                ...formData.aiSuggestions,
+                                impactScore: newScore,
+                                totalScore: newTotal,
+                              })
+                            }}
+                            className="text-center text-2xl font-bold text-blue-600"
+                          />
+                          <div className="text-xs text-blue-700">Impact Score</div>
                         </div>
-                        <div className="text-xs text-purple-700">Complexity Score</div>
+
+                        <div className="text-center p-3 bg-purple-50 rounded-lg">
+                          <Input
+                            type="number"
+                            min={2}
+                            max={6}
+                            value={formData.aiSuggestions.complexityScore}
+                            onChange={(e) => {
+                              const newScore = parseInt(e.target.value) || 0
+                              const newTotal = newScore + (formData.aiSuggestions?.impactScore || 0)
+                              handleInputChange("aiSuggestions", {
+                                ...formData.aiSuggestions,
+                                complexityScore: newScore,
+                                totalScore: newTotal,
+                              })
+                            }}
+                            className="text-center text-2xl font-bold text-purple-600"
+                          />
+                          <div className="text-xs text-purple-700">Complexity Score</div>
+                        </div>
+                      </div>
+
+                      <div className="text-center p-3 bg-red-50 rounded-lg">
+                        <div className="text-3xl font-bold text-red-600">
+                          {formData.aiSuggestions.totalScore}
+                        </div>
+                        <div className="text-sm text-red-700">
+                          Total Score ({getWorkingDaysFromScore(formData.aiSuggestions.totalScore)} WD)
+                          </div>
+                      </div>
+
+                      <div className="text-center p-3 bg-orange-50 rounded-lg">
+                        <div className="text-lg font-semibold text-orange-600">
+                          {formData.aiSuggestions.suggestedPriority}
+                        </div>
+                        <div className="text-xs text-orange-700">Suggested Priority</div>
                       </div>
                     </div>
+                  )}
 
-                    <div className="text-center p-3 bg-red-50 rounded-lg">
-                      <div className="text-3xl font-bold text-red-600">{formData.aiSuggestions.totalScore}</div>
-                      <div className="text-sm text-red-700">Total Score</div>
-                    </div>
-
-                    <div className="text-center p-3 bg-orange-50 rounded-lg">
-                      <div className="text-lg font-semibold text-orange-600">
-                        {formData.aiSuggestions.suggestedPriority}
-                      </div>
-                      <div className="text-xs text-orange-700">Suggested Priority</div>
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
@@ -423,32 +500,41 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   Assignment & Timeline
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label>DQ PIC</Label>
-                  <Input
-                    value={formData.dqPicUid}
-                    onChange={(e) => handleInputChange("dqPicUid", e.target.value)}
-                    placeholder="Assign Data Steward"
-                  />
-                </div>
-                <div>
-                  <Label>IT PIC</Label>
-                  <Input
-                    value={formData.itPicUid}
-                    onChange={(e) => handleInputChange("itPicUid", e.target.value)}
-                    placeholder="Assign IT Personnel"
-                  />
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Calendar className="w-4 h-4" />
-                  <span>Created: {formData.createdAt.toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Clock className="w-4 h-4" />
-                  <span>Deadline: {formData.deadline.toLocaleDateString()}</span>
-                </div>
-              </CardContent>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label>DQ PIC</Label>
+                    <Input
+                      value={formData.dqPicUid}
+                      onChange={(e) => handleInputChange("dqPicUid", e.target.value)}
+                      placeholder="Assign Data Steward"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>IT PIC</Label>
+                    <Input
+                      value={formData.itPicUid}
+                      onChange={(e) => handleInputChange("itPicUid", e.target.value)}
+                      placeholder="Assign IT Personnel"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <Calendar className="w-4 h-4" />
+                    <span>Created: {formData.createdAt.toLocaleDateString("en-GB")}</span>
+                  </div>
+
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <Calendar className="w-4 h-4" />
+                      <span>Assigned: {formData.assignedAt.toLocaleDateString("en-GB")}</span>
+                    </div>
+
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <Clock className="w-4 h-4" />
+                    <span>Deadline: {formData.deadline.toLocaleDateString("en-GB")}</span>
+                  </div>
+                </CardContent>
+
             </Card>
           </div>
         </div>
