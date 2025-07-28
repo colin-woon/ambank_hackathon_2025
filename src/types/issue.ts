@@ -42,7 +42,6 @@ export interface Issue {
   criticalDataElement?: "Yes" | "No"
   dqIssueCategory?: string
   issueField?: string
-  problemCategory?: string
   isRecurring?: boolean
 
   // RCA & Impact

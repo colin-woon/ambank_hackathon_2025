@@ -58,7 +58,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
       setEditedIssue(issue)
     }
   }, [isOpen, issue])
-  
+
   const handleChange = (field: keyof Issue, value: any) => {
     if (editedIssue) {
       setEditedIssue({ ...editedIssue, [field]: value })
@@ -192,13 +192,10 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     </SelectContent>
                   </Select>
                 </Field>
+                <Field label="Issue Category"><Input value={editedIssue.dqIssueCategory || ""} onChange={(e) => handleChange("dqIssueCategory", e.target.value)} /></Field>
                 <Field label="Issue Field"><Input value={editedIssue.issueField || ""} onChange={(e) => handleChange("issueField", e.target.value)} /></Field>
-                <Field label="DQ Issue Category"><Input value={editedIssue.dqIssueCategory || ""} onChange={(e) => handleChange("dqIssueCategory", e.target.value)} /></Field>
-                <Field label="Problem Category"><Input value={editedIssue.problemCategory || ""} onChange={(e) => handleChange("problemCategory", e.target.value)} /></Field>
                 <Field label="RCA Category"><Input value={editedIssue.rcaCategory || ""} onChange={(e) => handleChange("rcaCategory", e.target.value)} /></Field>
-                <div className="col-span-2">
-                  <Field label="RCA Details"><Textarea value={editedIssue.rcaDetails || ""} onChange={(e) => handleChange("rcaDetails", e.target.value)} /></Field>
-                </div>
+                <Field label="RCA Details"><Input value={editedIssue.rcaDetails || ""} onChange={(e) => handleChange("rcaDetails", e.target.value)} /></Field>
                 <div className="col-span-2">
                   <Field label="Impact Analysis"><Textarea value={editedIssue.impactAnalysis || ""} onChange={(e) => handleChange("impactAnalysis", e.target.value)} /></Field>
                 </div>
