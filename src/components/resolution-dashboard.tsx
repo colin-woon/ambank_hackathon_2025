@@ -15,13 +15,12 @@ interface ResolutionDashboardProps {
 export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: ResolutionDashboardProps) {
   // Filter issues for resolution stage based on resolution category
   const cleansingIssues = issues.filter(
-    (issue) => issue.status === "in_progress" && issue.resolutionCategory === "Manual Data Cleansing",
+    (issue) => issue.status === "cleansing"
   )
 
   const enhancingIssues = issues.filter(
     (issue) =>
-      issue.status === "in_progress" &&
-      (issue.resolutionCategory === "Software Improvement" || issue.resolutionCategory === "Process Improvement"),
+      issue.status === "enhancing"
   )
 
   const monitoringIssues = issues.filter((issue) => issue.status === "monitoring")
@@ -69,7 +68,7 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <p className="text-sm text-gray-700 mb-2 line-clamp-2">{issue.ticketTitle}</p>
+        <p className="text-sm text-gray-700 mb-2 line-clamp-2">{issue.description}</p>
         <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
           <span>{issue.requesterName}</span>
           <span>{issue.createdAt.toLocaleDateString()}</span>

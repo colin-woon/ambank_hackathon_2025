@@ -18,7 +18,7 @@ export interface Issue {
   suggestedResolution?: string
 
   // Status & Assignment
-  status: "new" | "in_progress" | "monitoring" | "closed" | "rejected" | "cleansing"
+  status: "new" | "monitoring" | "closed" | "rejected" | "cleansing" | "investigating" | "enhancing"
   createdByUid: string
   dqPicUid?: string
   dsPicUid?: string
@@ -50,7 +50,6 @@ export interface Issue {
   impactAnalysis?: string
 
   // Resolution Summary & Metrics
-  resolutionCategory?: string
   reportedRecordTotal?: number
   impactedRecordTotal?: number
   cleansedRecordTotal?: number

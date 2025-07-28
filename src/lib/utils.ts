@@ -5,22 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function addWorkingDays(startDate: Date, days: number): Date {
-	let date = new Date(startDate)
-	let added = 0
-	while (added < days) {
-		date.setDate(date.getDate() + 1)
-		const day = date.getDay()
-		if (day !== 0 && day !== 6) added++
-	}
-	return date
+export function getWorkingDaysBetween(startDate: Date, endDate: Date): number {
+  let count = 0
+  const current = new Date(startDate)
+  while (current <= endDate) {
+    const day = current.getDay()
+    if (day !== 0 && day !== 6) count++ // Exclude Sunday (0) and Saturday (6)
+    current.setDate(current.getDate() + 1)
+  }
+  return count
 }
 
-export function calculateDeadlineFromScore(score: number, startDate: Date): Date {
-	let days = 15
-	if (score >= 5 && score <= 8) days = 30
-	else if (score >= 9 && score <= 12) days = 60
-	else if (score >= 13 && score <= 15) days = 90
-	else if (score > 15) days = 120
-	return addWorkingDays(startDate, days)
+export function getAgingBucket(months: number): string {
+  if (months <= 6) return "0–6 months"
+  if (months <= 18) return "7–18 months"
+  return ">18 months"
 }

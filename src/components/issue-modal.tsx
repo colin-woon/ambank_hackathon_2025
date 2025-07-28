@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { AlertCircle, Bot, Calendar, CheckCircle, Clock, Cpu, GitCommit, GitMerge, HardDrive, HelpCircle, Target, XCircle } from "lucide-react"
+import { AlertCircle, Bot, Calendar, CheckCircle, Clock, Cpu, GitBranch, GitBranchIcon, GitCommit, GitCommitHorizontalIcon, GitMerge, GitPullRequest, GitPullRequestArrowIcon, HardDrive, HelpCircle, Target, XCircle } from "lucide-react"
+import { getWorkingDaysBetween, getAgingBucket } from "@/lib/utils"
 
 interface IssueModalProps {
   issue: Issue | null
@@ -48,6 +49,31 @@ const InfoField = ({ label, value, icon }: { label: string; value: string | numb
 
 export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps) {
   const [editedIssue, setEditedIssue] = useState<Issue | null>(issue)
+  const [agingDays, setAgingDays] = useState<number | null>(null);
+  const [agingMonths, setAgingMonths] = useState<number | null>(null);
+  const [agingBucket, setAgingBucket] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!editedIssue?.assignedAt) {
+      setAgingDays(null);
+      setAgingMonths(null);
+      setAgingBucket(null);
+      return;
+    }
+
+    const now = new Date();
+    const assigned = new Date(editedIssue.assignedAt);
+
+    const days = getWorkingDaysBetween(assigned, now);
+    const months =
+      (now.getFullYear() - assigned.getFullYear()) * 12 +
+      now.getMonth() - assigned.getMonth();
+
+    setAgingDays(days);
+    setAgingMonths(months);
+    setAgingBucket(getAgingBucket(months));
+  }, [editedIssue?.assignedAt]);
+
 
   useEffect(() => {
     setEditedIssue(issue)
@@ -72,12 +98,9 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     }
   }
 
-  const { agingDays, agingMonths, agingBucket, outstanding, percentCleansed, percentCleansedValue } = useMemo(() => {
+  const {outstanding, percentCleansed, percentCleansedValue } = useMemo(() => {
     if (!issue)
       return {
-        agingDays: 0,
-        agingMonths: 0,
-        agingBucket: "N/A",
         outstanding: 0,
         percentCleansed: "0.00%",
         percentCleansedValue: 0,
@@ -134,11 +157,12 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="investigating">In Progress</SelectItem>
                       <SelectItem value="cleansing">Cleansing</SelectItem>
                       <SelectItem value="enhancing">Enhancing</SelectItem>
-                      <SelectItem value="monitoring">Monitoring</SelectItem>
                       <SelectItem value="closed">Closed</SelectItem>
+                      <SelectItem value="resolved">In Progress</SelectItem>
+                      <SelectItem value="monitoring">Monitoring</SelectItem>
                     </SelectContent>
                   </Select>
                 </Field>
@@ -272,19 +296,103 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
             </Section>
 
             <Section title="Assignment & Timeline" icon={<Clock className="text-red-600" />}>
-                <Field label="Data Quality PIC"><Input value={editedIssue.dqPicUid || ""} onChange={(e) => handleChange("dqPicUid", e.target.value)} placeholder="Assign DQ PIC" /></Field>
-                <Field label="Data Steward PIC"><Input value={editedIssue.dsPicUid || ""} onChange={(e) => handleChange("dsPicUid", e.target.value)} placeholder="Assign Data Steward PIC" /></Field>
-                <Field label="IT PIC"><Input value={editedIssue.itPicUid || ""} onChange={(e) => handleChange("itPicUid", e.target.value)} placeholder="Assign IT PIC" /></Field>
-                <div className="space-y-2 pt-2 border-t mt-4">
-                    <InfoField label="Created" value={new Date(editedIssue.createdAt).toLocaleDateString()} icon={<GitCommit />} />
-                    <InfoField label="Picked Up" value={editedIssue.pickedUpAt ? new Date(editedIssue.pickedUpAt).toLocaleDateString() : "N/A"} icon={<GitMerge />} />
-                    <InfoField label="Resolved" value={editedIssue.resolvedAt ? new Date(editedIssue.resolvedAt).toLocaleDateString() : "N/A"} icon={<CheckCircle />} />
-                    <InfoField label="Completed" value={editedIssue.completedAt ? new Date(editedIssue.completedAt).toLocaleDateString() : "N/A"} icon={<XCircle />} />
-                    <InfoField label="Aging Days" value={agingDays} icon={<Calendar />} />
-                    <InfoField label="Aging Months" value={agingMonths} icon={<Calendar />} />
-                    <InfoField label="Aging Bucket" value={agingBucket} icon={<HelpCircle />} />
+              <Field label="Data Quality PIC">
+                <Input
+                  value={editedIssue.dqPicUid || ""}
+                  onChange={(e) => handleChange("dqPicUid", e.target.value)}
+                  placeholder="Assign DQ PIC"
+                />
+              </Field>
+
+              <Field label="Data Steward PIC">
+                <Input
+                  value={editedIssue.dsPicUid || ""}
+                  onChange={(e) => handleChange("dsPicUid", e.target.value)}
+                  placeholder="Assign Data Steward PIC"
+                />
+              </Field>
+
+              <Field label="IT PIC">
+                <Input
+                  value={editedIssue.itPicUid || ""}
+                  onChange={(e) => handleChange("itPicUid", e.target.value)}
+                  placeholder="Assign IT PIC"
+                />
+              </Field>
+
+              <div className="space-y-2 pt-2 border-t mt-4">
+                {/* Created - set once when created */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <GitCommit className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Created:</span>
+                  <span>{new Date(editedIssue.createdAt).toLocaleDateString("en-GB")}</span>
                 </div>
+
+                {/* Picked Up - set when status changes from 'new' to 'in_progress' */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <GitMerge className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Picked Up:</span>
+                  <span>
+                    {editedIssue.pickedUpAt
+                      ? new Date(editedIssue.pickedUpAt).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </span>
+                </div>
+
+                {/* Assigned - set when status changes from 'in_progress' to 'cleansing' */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <GitPullRequestArrowIcon className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Assigned:</span>
+                  <span>
+                    {editedIssue.assignedAt
+                      ? new Date(editedIssue.assignedAt).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </span>
+                </div>
+
+                {/* Resolved - set when status changes to 'resolved' */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <CheckCircle className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Resolved:</span>
+                  <span>
+                    {editedIssue.resolvedAt
+                      ? new Date(editedIssue.resolvedAt).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </span>
+                </div>
+
+                {/* Completed - set when status changes to 'closed' */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <XCircle className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Completed:</span>
+                  <span>
+                    {editedIssue.completedAt
+                      ? new Date(editedIssue.completedAt).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </span>
+                </div>
+
+                {/* Aging Info - derived from assignedAt */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <Calendar className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Aging Days:</span>
+                  <span>{agingDays ?? "N/A"}</span>
+                </div>
+
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <Calendar className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Aging Months:</span>
+                  <span>{agingMonths ?? "N/A"}</span>
+                </div>
+
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <HelpCircle className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Aging Bucket:</span>
+                  <span>{agingBucket ?? "N/A"}</span>
+                </div>
+              </div>
             </Section>
+
 
             <Section title="Cleansing Statistics" icon={<HardDrive className="text-red-600" />}>
                 <div className="grid grid-cols-2 gap-4">
