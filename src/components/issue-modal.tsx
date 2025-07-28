@@ -197,6 +197,9 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 <Field label="RCA Category"><Input value={editedIssue.rcaCategory || ""} onChange={(e) => handleChange("rcaCategory", e.target.value)} /></Field>
                 <Field label="RCA Details"><Input value={editedIssue.rcaDetails || ""} onChange={(e) => handleChange("rcaDetails", e.target.value)} /></Field>
                 <div className="col-span-2">
+                  <Field label="RCA Details"><Textarea value={editedIssue.rcaDetails || ""} onChange={(e) => handleChange("rcaDetails", e.target.value)} /></Field>
+                </div>
+                <div className="col-span-2">
                   <Field label="Impact Analysis"><Textarea value={editedIssue.impactAnalysis || ""} onChange={(e) => handleChange("impactAnalysis", e.target.value)} /></Field>
                 </div>
               </div>
@@ -217,11 +220,39 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
               <Button className="w-full bg-red-600 hover:bg-red-700">Analyze with AI</Button>
               <div className="flex justify-around text-center p-2 bg-white rounded-lg">
                 <div>
-                  <div className="text-2xl font-bold text-blue-600">{editedIssue.aiSuggestions?.impactScore || 0}</div>
+                  <input
+                    type="number"
+                    min="0"
+                    max="6"
+                    value={editedIssue.aiSuggestions?.impactScore || 0}
+                    onChange={(e) => {
+                      const value = Math.min(6, Math.max(0, parseInt(e.target.value) || 0));
+                      handleChange("aiSuggestions", {
+                        ...editedIssue.aiSuggestions,
+                        impactScore: value,
+                        totalScore: value + (editedIssue.aiSuggestions?.complexityScore || 0)
+                      });
+                    }}
+                    className="text-3xl font-bold text-blue-600 w-20 text-center bg-transparent border-none outline-none"
+                  />
                   <div className="text-xs text-gray-500">Impact Score</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-purple-600">{editedIssue.aiSuggestions?.complexityScore || 0}</div>
+                  <input
+                    type="number"
+                    min="0"
+                    max="12"
+                    value={editedIssue.aiSuggestions?.complexityScore || 0}
+                    onChange={(e) => {
+                      const value = Math.min(12, Math.max(0, parseInt(e.target.value) || 0));
+                      handleChange("aiSuggestions", {
+                        ...editedIssue.aiSuggestions,
+                        complexityScore: value,
+                        totalScore: value + (editedIssue.aiSuggestions?.impactScore || 0)
+                      });
+                    }}
+                    className="text-3xl font-bold text-purple-600 w-20 text-center bg-transparent border-none outline-none"
+                  />
                   <div className="text-xs text-gray-500">Complexity Score</div>
                 </div>
               </div>
