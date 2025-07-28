@@ -2,7 +2,6 @@ export interface Issue {
   // Core Details
   id: string
   description: string
-  priority: "High" | "Medium" | "Low"
   mediaAttachments: string[]
 
   // Requester & Source Info

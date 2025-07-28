@@ -70,7 +70,6 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
     // Reset form
     setFormData({
       description: "",
-      priority: "Medium",
       requesterName: "",
       requesterContact: "",
       requesterDepartment: "",
