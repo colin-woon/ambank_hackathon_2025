@@ -136,9 +136,10 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     </SelectContent>
                   </Select>
                 </Field>
+                <div className="flex justify-end items-end gap-3">
                 <Field label="Priority">
                   <Select value={editedIssue.priority} onValueChange={(v) => handleChange("priority", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="High">High</SelectItem>
                       <SelectItem value="Medium">Medium</SelectItem>
@@ -146,6 +147,16 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     </SelectContent>
                   </Select>
                 </Field>
+                <Field label="Recurring">
+                  <Select value={editedIssue.isRecurring} onValueChange={(v) => handleChange("isRecurring", v)}>
+                    <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Yes">Yes</SelectItem>
+                      <SelectItem value="No">No</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                </div>
               </div>
               <Field label="Description">
                 <Textarea value={editedIssue.description} onChange={(e) => handleChange("description", e.target.value)} rows={4} />

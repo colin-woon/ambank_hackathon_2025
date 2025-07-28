@@ -38,8 +38,8 @@ export interface Issue {
   criticalDataElement?: "Yes" | "No"
   dqIssueCategory?: string
   issueField?: string
-  problemCategory?: string
-  isRecurring?: boolean
+  problemCategory?: string 
+  isRecurring?: string
 
   // RCA & Impact
   rcaCategory?: string
