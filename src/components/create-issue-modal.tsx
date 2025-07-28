@@ -54,6 +54,7 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    const now = new Date()
 
     const newIssue: Omit<Issue, "id" | "createdAt"> = {
       ...formData,
@@ -61,6 +62,7 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
       createdByUid: "current-user",
       dqPicUid: "",
       itPicUid: "",
+      assignedAt: now,
       deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       mediaAttachments: [],
     }

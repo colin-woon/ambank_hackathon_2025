@@ -22,6 +22,7 @@ export interface Issue {
 
   // Timestamps
   createdAt: Date
+  assignedAt: Date
   deadline: Date
 
   // Key Issue Classification (Optional)
