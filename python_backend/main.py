@@ -1,0 +1,299 @@
+import logging
+import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from config import settings
+from detector import DuplicateDetector
+from routes import router, set_detector
+
+# Configure logging
+logging.basicConfig(level=getattr(logging, settings.LOG_LEVEL))
+logger = logging.getLogger(__name__)
+
+# Create FastAPI app
+app = FastAPI(
+    title=settings.API_TITLE,
+    version=settings.API_VERSION
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routes
+app.include_router(router)
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize the duplicate detector on startup"""
+    try:
+        detector = DuplicateDetector()
+        set_detector(detector)
+        logger.info("Duplicate detector initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize duplicate detector: {str(e)}")
+        raise
+
+if __name__ == "__main__":
+    uvicorn.run(
+        app,
+        host=settings.HOST,
+        port=settings.PORT
+    )
+
+
+# from fastapi import FastAPI, HTTPException
+# from fastapi.middleware.cors import CORSMiddleware
+# from pydantic import BaseModel
+# from typing import List, Optional
+# import uvicorn
+# from dotenv import load_dotenv
+# import os
+# from google import genai
+# import pandas as pd
+# import numpy as np
+# from google.genai import types
+# import chromadb
+# import logging
+
+# # Configure logging
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
+
+# # Load environment variables
+# load_dotenv()
+
+# app = FastAPI(title="Issue Tracker Duplicate Detection API", version="1.0.0")
+
+# # Configure CORS
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["http://localhost:3000"],  # Next.js default port
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+# # Pydantic models for request/response
+# class IssueRequest(BaseModel):
+#     id: str
+#     description: str
+
+# class SimilarIssue(BaseModel):
+#     ticket_id: str
+#     description: str
+#     similarity_score: float
+
+# class DuplicateDetectionResponse(BaseModel):
+#     new_issue_id: str
+#     new_issue_description: str
+#     similar_issues: List[SimilarIssue]
+#     is_duplicate: bool
+#     duplicate_threshold: float = 0.8
+
+# class HealthResponse(BaseModel):
+#     status: str
+#     message: str
+
+# # Global variables for the duplicate detection system
+# api_key = None
+# client = None
+# collection = None
+# EMBEDDING_MODEL = "gemini-embedding-001"
+# EMBEDDING_DIMENSION = 768
+# DUPLICATE_THRESHOLD = 0.8
+
+# class DuplicateDetector:
+#     def __init__(self):
+#         self.api_key = os.getenv("GEMINI_API_KEY")
+#         if not self.api_key:
+#             raise ValueError("GEMINI_API_KEY not found in environment variables")
+
+#         self.client = genai.Client(api_key=self.api_key)
+#         self.chroma_client = chromadb.PersistentClient(path="./chroma_db")
+#         self.collection = None
+#         self.initialize_collection()
+
+#     def initialize_collection(self):
+#         """Initialize ChromaDB collection with past issues"""
+#         try:
+#             self.collection = self.chroma_client.get_collection(name="dq_issues_embeddings")
+#             logger.info("Collection 'dq_issues_embeddings' loaded successfully")
+#         except Exception as e:
+#             logger.info("Collection doesn't exist, creating and populating...")
+#             self.collection = self.chroma_client.get_or_create_collection(name="dq_issues_embeddings")
+#             self.load_past_issues()
+
+#     def load_past_issues(self):
+#         """Load past issues from CSV and store embeddings in ChromaDB"""
+#         try:
+#             # Load CSV data
+#             df = pd.read_csv("Data_Steward_New_Data.csv", encoding='ISO-8859-1')
+#             id_column = "Ticket ID"
+#             desc_column = "Description of DQ Issue"
+
+#             df = df[[id_column, desc_column]].dropna().drop_duplicates()
+#             past_issues_data = [(row[id_column], row[desc_column]) for index, row in df.iterrows()]
+
+#             past_issue_ids = [str(issue[0]) for issue in past_issues_data]
+#             past_issue_descriptions = [issue[1] for issue in past_issues_data]
+
+#             # Generate embeddings for past issues
+#             logger.info(f"Generating embeddings for {len(past_issue_descriptions)} past issues...")
+#             past_embeddings_response = self.client.models.embed_content(
+#                 model=EMBEDDING_MODEL,
+#                 contents=past_issue_descriptions,
+#                 config=types.EmbedContentConfig(task_type="SEMANTIC_SIMILARITY")
+#             )
+#             past_embeddings_list = [e.values for e in past_embeddings_response.embeddings]
+
+#             # Add embeddings to ChromaDB
+#             self.collection.add(
+#                 embeddings=past_embeddings_list,
+#                 documents=past_issue_descriptions,
+#                 metadatas=[{"ticket_id": id} for id in past_issue_ids],
+#                 ids=past_issue_ids
+#             )
+#             logger.info(f"Added {len(past_issue_ids)} embeddings to ChromaDB")
+
+#         except FileNotFoundError:
+#             logger.warning("Data_Steward_New_Data.csv not found. Collection will be empty.")
+#         except Exception as e:
+#             logger.error(f"Error loading past issues: {str(e)}")
+
+#     def detect_duplicates(self, issue_id: str, issue_description: str) -> DuplicateDetectionResponse:
+#         """Detect duplicate issues for a given issue description"""
+#         try:
+#             # Generate embedding for the new issue
+#             logger.info(f"Generating embedding for issue: {issue_id}")
+#             new_issue_embedding_response = self.client.models.embed_content(
+#                 model=EMBEDDING_MODEL,
+#                 contents=[issue_description],
+#                 config=types.EmbedContentConfig(task_type="SEMANTIC_SIMILARITY")
+#             )
+#             new_issue_embedding = np.array(new_issue_embedding_response.embeddings[0].values)
+
+#             # Query ChromaDB for similar issues
+#             results = self.collection.query(
+#                 query_embeddings=new_issue_embedding.tolist(),
+#                 n_results=3,
+#                 include=['distances', 'documents', 'metadatas']
+#             )
+
+#             # Process results
+#             similar_issues = []
+#             is_duplicate = False
+
+#             if results['ids'][0]:  # Check if results exist
+#                 for i in range(len(results['ids'][0])):
+#                     ticket_id = results['ids'][0][i]
+#                     description = results['documents'][0][i]
+#                     distance = results['distances'][0][i]
+#                     similarity_score = 1 - distance  # Convert distance to similarity
+
+#                     similar_issues.append(SimilarIssue(
+#                         ticket_id=ticket_id,
+#                         description=description,
+#                         similarity_score=similarity_score
+#                     ))
+
+#                     # Check if any similar issue exceeds duplicate threshold
+#                     if similarity_score >= DUPLICATE_THRESHOLD:
+#                         is_duplicate = True
+
+#             return DuplicateDetectionResponse(
+#                 new_issue_id=issue_id,
+#                 new_issue_description=issue_description,
+#                 similar_issues=similar_issues,
+#                 is_duplicate=is_duplicate,
+#                 duplicate_threshold=DUPLICATE_THRESHOLD
+#             )
+
+#         except Exception as e:
+#             logger.error(f"Error in duplicate detection: {str(e)}")
+#             raise HTTPException(status_code=500, detail=f"Error in duplicate detection: {str(e)}")
+
+# # Initialize the duplicate detector
+# detector = None
+
+# @app.on_event("startup")
+# async def startup_event():
+#     """Initialize the duplicate detector on startup"""
+#     global detector
+#     try:
+#         detector = DuplicateDetector()
+#         logger.info("Duplicate detector initialized successfully")
+#     except Exception as e:
+#         logger.error(f"Failed to initialize duplicate detector: {str(e)}")
+#         raise
+
+# @app.get("/", response_model=HealthResponse)
+# async def root():
+#     """Health check endpoint"""
+#     return HealthResponse(status="healthy", message="Issue Tracker Duplicate Detection API is running")
+
+# @app.get("/health", response_model=HealthResponse)
+# async def health_check():
+#     """Detailed health check"""
+#     try:
+#         count = detector.collection.count() if detector and detector.collection else 0
+#         return HealthResponse(
+#             status="healthy",
+#             message=f"API is running. ChromaDB collection has {count} embeddings."
+#         )
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+
+# @app.post("/detect-duplicates", response_model=DuplicateDetectionResponse)
+# async def detect_duplicates(request: IssueRequest):
+#     """Detect duplicate issues for a given issue description"""
+#     if not detector:
+#         raise HTTPException(status_code=500, detail="Duplicate detector not initialized")
+
+#     try:
+#         result = detector.detect_duplicates(request.id, request.description)
+#         logger.info(f"Duplicate detection completed for issue: {request.id}")
+#         print("\n---- RESULT ----\n", result)
+#         return result
+#     except Exception as e:
+#         logger.error(f"Error processing duplicate detection request: {str(e)}")
+#         raise HTTPException(status_code=500, detail=str(e))
+
+# @app.post("/add-issue")
+# async def add_issue(request: IssueRequest):
+#     """Add a new issue to the knowledge base (for future duplicate detection)"""
+#     if not detector:
+#         raise HTTPException(status_code=500, detail="Duplicate detector not initialized")
+
+#     try:
+#         # Generate embedding for the new issue
+#         embedding_response = detector.client.models.embed_content(
+#             model=EMBEDDING_MODEL,
+#             contents=[request.description],
+#             config=types.EmbedContentConfig(task_type="SEMANTIC_SIMILARITY")
+#         )
+#         embedding = embedding_response.embeddings[0].values
+
+#         # Add to ChromaDB
+#         detector.collection.add(
+#             embeddings=[embedding],
+#             documents=[request.description],
+#             metadatas=[{"ticket_id": request.id}],
+#             ids=[request.id]
+#         )
+
+#         logger.info(f"Added new issue to knowledge base: {request.id}")
+#         return {"message": f"Issue {request.id} added to knowledge base successfully"}
+
+#     except Exception as e:
+#         logger.error(f"Error adding issue to knowledge base: {str(e)}")
+#         raise HTTPException(status_code=500, detail=str(e))
+
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="0.0.0.0", port=8000)
