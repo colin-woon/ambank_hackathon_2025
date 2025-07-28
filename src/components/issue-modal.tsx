@@ -98,32 +98,32 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     }
   }
 
-  const {outstanding, percentCleansed, percentCleansedValue } = useMemo(() => {
-    if (!issue)
+  const { outstanding, percentCleansed, percentCleansedValue } = useMemo(() => {
+    if (!editedIssue)
       return {
         outstanding: 0,
-        percentCleansed: "0.00%",
+        percentCleansed: "0%",
         percentCleansedValue: 0,
       }
 
-    const now = new Date()
-    const created = new Date(issue.createdAt)
-    const days = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24))
-    const months = Math.floor(days / 30)
-    let bucket = "0-30 days"
-    if (days > 90) bucket = "90+ days"
-    else if (days > 60) bucket = "61-90 days"
-    else if (days > 30) bucket = "31-60 days"
+    const impacted = editedIssue.impactedRecordTotal || 0
+    const cleansed = editedIssue.cleansedRecordTotal || 0
+    const excluded = editedIssue.excludedRecordTotal || 0
 
-    const impacted = issue.impactedRecordTotal || 0
-    const cleansed = issue.cleansedRecordTotal || 0
-    const excluded = issue.excludedRecordTotal || 0
-    const out = impacted - cleansed - excluded
-    const percentValue = impacted > 0 ? (cleansed / impacted) * 100 : 0
-    const perc = percentValue.toFixed(0) + "%"
+    const outstanding = impacted - cleansed - excluded
+    const percentCleansedValue = impacted > 0 ? ((impacted - outstanding) / impacted) * 100 : 0
+    const percentCleansed = percentCleansedValue.toFixed(0) + "%"
 
-    return { agingDays: days, agingMonths: months, agingBucket: bucket, outstanding: out, percentCleansed: perc, percentCleansedValue: percentValue }
-  }, [issue])
+    return {
+      outstanding,
+      percentCleansed,
+      percentCleansedValue,
+    }
+  }, [
+    editedIssue?.impactedRecordTotal,
+    editedIssue?.cleansedRecordTotal,
+    editedIssue?.excludedRecordTotal,
+  ])
 
   if (!isOpen || !editedIssue) return null
 

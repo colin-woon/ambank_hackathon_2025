@@ -74,17 +74,8 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
           <span>{issue.createdAt.toLocaleDateString()}</span>
         </div>
 
-        {/* Show resolution category if available */}
-        {issue.resolutionCategory && (
-          <div className="mb-2">
-            <Badge variant="secondary" className="text-xs">
-              {issue.resolutionCategory}
-            </Badge>
-          </div>
-        )}
-
         {/* Show cleansing progress for cleansing issues */}
-        {issue.resolutionCategory === "Manual Data Cleansing" && issue.impactedRecordTotal && (
+        {issue.impactedRecordTotal && (
           <div className="mb-2">
             <div className="text-xs text-gray-600 mb-1">
               Progress: {Math.round(((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}%
