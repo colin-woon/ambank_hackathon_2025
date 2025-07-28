@@ -16,6 +16,14 @@ import { Bot, Calendar, Clock, Target, Zap } from "lucide-react"
 import { calculateDeadlineFromScore } from "@/lib/utils"
 import { addWorkingDays } from "@/lib/utils"
 
+import DetectDuplicateButton from '@/components/duplicate-detection-button';
+import ResultsModal from '@/components/duplicate-result-modal';
+import { DuplicateDetectionResponse } from '@/types/duplicate-detection';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
+
+
+
 interface IssueModalProps {
   issue: Issue | null
   isOpen: boolean
@@ -35,6 +43,22 @@ function getWorkingDaysFromScore(score: number): number {
 export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps) {
   const [formData, setFormData] = useState<Issue | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [result, setResult] = useState<DuplicateDetectionResponse | null>(null);
+  const [error, setError] = useState<string>('');
+  const [showModal, setShowModal] = useState(false);
+
+  const handleResult = (newResult: DuplicateDetectionResponse) => {
+    setResult(newResult);
+    setShowModal(true);
+  };
+
+  const handleError = (errorMessage: string) => {
+    setError(errorMessage);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+  };
 
   useEffect(() => {
     if (issue) {
@@ -489,6 +513,26 @@ const newDeadline = addWorkingDays(new Date(), daysToAdd)
                     </div>
                   )}
 
+                <DetectDuplicateButton
+                  issueId={formData.id}
+                  issueDescription={formData.description}
+                  onResult={handleResult}
+                  onError={handleError}
+                />
+                {/* Error Display */}
+                {error && (
+                  <Alert className="mb-6 border-red-200 bg-red-50">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                    <AlertDescription className="text-red-800">
+                      {error}
+                    </AlertDescription>
+                  </Alert>
+                )}
+                <ResultsModal
+                  isOpen={showModal}
+                  onClose={closeModal}
+                  result={result}
+                />
               </CardContent>
             </Card>
 
@@ -536,6 +580,7 @@ const newDeadline = addWorkingDays(new Date(), daysToAdd)
                 </CardContent>
 
             </Card>
+
           </div>
         </div>
 

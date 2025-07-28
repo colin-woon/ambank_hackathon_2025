@@ -57,7 +57,7 @@ export default function DetectDuplicateButton({
     <Button
       onClick={handleDetectDuplicates}
       disabled={loading || !issueId.trim() || !issueDescription.trim()}
-      className="flex items-center gap-2"
+      className="w-full flex items-center gap-2"
     >
       {loading ? (
         <>
