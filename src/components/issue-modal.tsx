@@ -155,7 +155,7 @@ const newDeadline = addWorkingDays(new Date(), daysToAdd)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="!w-full !max-w-[50vw] px-8 py-6 max-h-[90vh] overflow-y-auto">
+      <DialogContent className="!w-full !max-w-[70vw] px-8 py-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span className="text-red-700">
