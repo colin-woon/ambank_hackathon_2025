@@ -112,30 +112,7 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
                 rows={3}
                 required
               />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-2 bg-transparent"
-                onClick={checkForDuplicates}
-              >
-                <Search className="w-4 h-4 mr-2" />
-                Check for Duplicates
-              </Button>
             </div>
-
-            {showDuplicateWarning && (
-              <div className="md:col-span-2">
-                <Alert className="border-orange-200 bg-orange-50">
-                  <AlertTriangle className="h-4 w-4 text-orange-600" />
-                  <AlertDescription className="text-orange-800">
-                    {"Heads up! A similar issue ["}
-                    <span className="font-semibold">{duplicateIssueId}</span>
-                    {"] already exists. Do you still want to proceed?"}
-                  </AlertDescription>
-                </Alert>
-              </div>
-            )}
 
             <div>
               <Label htmlFor="priority">Priority</Label>
