@@ -157,12 +157,12 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="investigating">In Progress</SelectItem>
+                      <SelectItem value="investigating">Investigating</SelectItem>
                       <SelectItem value="cleansing">Cleansing</SelectItem>
                       <SelectItem value="enhancing">Enhancing</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
-                      <SelectItem value="resolved">In Progress</SelectItem>
                       <SelectItem value="monitoring">Monitoring</SelectItem>
+                      <SelectItem value="closed">Closed</SelectItem>
+                      <SelectItem value="resolved">Resolved</SelectItem>
                     </SelectContent>
                   </Select>
                 </Field>
@@ -350,17 +350,6 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   </span>
                 </div>
 
-                {/* Resolved - set when status changes to 'resolved' */}
-                <div className="flex items-center text-sm text-gray-600 gap-x-2">
-                  <CheckCircle className="w-4 h-4 text-gray-500" />
-                  <span className="font-medium">Resolved:</span>
-                  <span>
-                    {editedIssue.resolvedAt
-                      ? new Date(editedIssue.resolvedAt).toLocaleDateString("en-GB")
-                      : "N/A"}
-                  </span>
-                </div>
-
                 {/* Completed - set when status changes to 'closed' */}
                 <div className="flex items-center text-sm text-gray-600 gap-x-2">
                   <XCircle className="w-4 h-4 text-gray-500" />
@@ -368,6 +357,17 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   <span>
                     {editedIssue.completedAt
                       ? new Date(editedIssue.completedAt).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </span>
+                </div>
+
+                {/* Resolved - set when status changes to 'resolved' */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <CheckCircle className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Resolved:</span>
+                  <span>
+                    {editedIssue.resolvedAt
+                      ? new Date(editedIssue.resolvedAt).toLocaleDateString("en-GB")
                       : "N/A"}
                   </span>
                 </div>

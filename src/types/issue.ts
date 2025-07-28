@@ -2,6 +2,7 @@ export interface Issue {
   // Core Details
   id: string
   description: string
+  priority: "Super High" | "High" | "Medium" | "Low"
   mediaAttachments: string[]
 
   // Requester & Source Info
@@ -17,7 +18,7 @@ export interface Issue {
   suggestedResolution?: string
 
   // Status & Assignment
-  status: "new" | "monitoring" | "closed" | "rejected" | "cleansing" | "investigating" | "enhancing"
+  status: "new" | "monitoring" | "closed" | "rejected" | "cleansing" | "investigating" | "enhancing" | "resolved"
   createdByUid: string
   dqPicUid?: string
   dsPicUid?: string
