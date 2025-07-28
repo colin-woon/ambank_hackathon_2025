@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { IssueTable } from "@/components/issue-table"
 import { Button } from "@/components/ui/button"
@@ -11,12 +11,46 @@ import type { Issue } from "@/types/issue"
 import { AnalysisDashboard } from "@/components/analysis-dashboard"
 import { ResolutionDashboard } from "@/components/resolution-dashboard"
 import { mockIssues } from "@/lib/mock-data"
+import { firestore } from "@/lib/firebase"
+import { collection, getDocs, Timestamp } from "firebase/firestore"
 
 export default function HomePage() {
-  const [issues, setIssues] = useState<Issue[]>(mockIssues)
+  const [issues, setIssues] = useState<Issue[]>([])
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false)
+
+  useEffect(() => {
+    const fetchIssues = async () => {
+      const issuesCollection = collection(firestore, "issues");
+      const issueSnapshot = await getDocs(issuesCollection);
+      const issuesList = issueSnapshot.docs.map(doc => {
+        const data = doc.data();
+        // Convert Firestore Timestamps to JS Date objects
+        const convertTimestamp = (timestamp: any) => {
+          if (timestamp instanceof Timestamp) {
+            return timestamp.toDate();
+          }
+          // Handle date strings
+          if (typeof timestamp === 'string') {
+            return new Date(timestamp);
+          }
+          return new Date(); // Fallback for undefined or null dates
+        };
+
+        return {
+          ...data,
+          id: doc.id,
+          createdAt: convertTimestamp(data.createdAt),
+          deadline: convertTimestamp(data.deadline),
+          assignedAt: data.assignedAt ? convertTimestamp(data.assignedAt) : new Date(),
+        } as Issue;
+      });
+      setIssues(issuesList);
+    };
+
+    fetchIssues();
+  }, []);
 
   const handleCreateIssue = (newIssue: Omit<Issue, "id" | "createdAt">) => {
     const issue: Issue = {
