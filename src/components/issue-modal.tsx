@@ -152,18 +152,42 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 <Field label="Contact Number"><Input value={editedIssue.requesterContact} onChange={(e) => handleChange("requesterContact", e.target.value)} /></Field>
                 <Field label="Department"><Input value={editedIssue.requesterDepartment} onChange={(e) => handleChange("requesterDepartment", e.target.value)} /></Field>
                 <Field label="Unit"><Input value={editedIssue.requesterUnit} onChange={(e) => handleChange("requesterUnit", e.target.value)} /></Field>
+                <Field label="Requester Cost Center"><Input value={editedIssue.requesterCostCenter || ""} onChange={(e) => handleChange("requesterCostCenter", e.target.value)} /></Field>
+                <Field label="Requester Team Leader"><Input value={editedIssue.requesterTeamLeader || ""} onChange={(e) => handleChange("requesterTeamLeader", e.target.value)} /></Field>
                 <Field label="Source System"><Input value={editedIssue.sourceSystem} onChange={(e) => handleChange("sourceSystem", e.target.value)} /></Field>
                 <Field label="Impacted Area"><Input value={editedIssue.impactedArea} onChange={(e) => handleChange("impactedArea", e.target.value)} /></Field>
+                <Field label="Other PIC"><Input value={editedIssue.otherPIC || ""} onChange={(e) => handleChange("otherPIC", e.target.value)} /></Field>
+                <Field label="Suggested Resolution"><Input value={editedIssue.suggestedResolution || ""} onChange={(e) => handleChange("suggestedResolution", e.target.value)} /></Field>
               </div>
             </Section>
 
             <Section title="Issue Classification">
               <div className="grid grid-cols-2 gap-4">
+                <Field label="Data Class"><Input value={editedIssue.dataClass || ""} onChange={(e) => handleChange("dataClass", e.target.value)} /></Field>
+                <Field label="Critical Data Element">
+                  <Select value={editedIssue.criticalDataElement || ""} onValueChange={(v) => handleChange("criticalDataElement", v)}>
+                    <SelectTrigger><SelectValue placeholder="Select Yes/No" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Yes">Yes</SelectItem>
+                      <SelectItem value="No">No</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Issue Field"><Input value={editedIssue.issueField || ""} onChange={(e) => handleChange("issueField", e.target.value)} /></Field>
                 <Field label="DQ Issue Category"><Input value={editedIssue.dqIssueCategory || ""} onChange={(e) => handleChange("dqIssueCategory", e.target.value)} /></Field>
                 <Field label="Problem Category"><Input value={editedIssue.problemCategory || ""} onChange={(e) => handleChange("problemCategory", e.target.value)} /></Field>
                 <Field label="RCA Category"><Input value={editedIssue.rcaCategory || ""} onChange={(e) => handleChange("rcaCategory", e.target.value)} /></Field>
-                <Field label="RCA Details"><Textarea value={editedIssue.rcaDetails || ""} onChange={(e) => handleChange("rcaDetails", e.target.value)} /></Field>
+                <div className="col-span-2">
+                  <Field label="RCA Details"><Textarea value={editedIssue.rcaDetails || ""} onChange={(e) => handleChange("rcaDetails", e.target.value)} /></Field>
+                </div>
+                <div className="col-span-2">
+                  <Field label="Impact Analysis"><Textarea value={editedIssue.impactAnalysis || ""} onChange={(e) => handleChange("impactAnalysis", e.target.value)} /></Field>
+                </div>
               </div>
+            </Section>
+
+            <Section title="Extra Remarks">
+                <Textarea value={editedIssue.extraRemarks || ""} onChange={(e) => handleChange("extraRemarks", e.target.value)} rows={4} />
             </Section>
             
             <Section title="System Enhancement / Process Improvement Notes">
