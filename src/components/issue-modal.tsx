@@ -148,8 +148,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   </Select>
                 </Field>
                 <Field label="Recurring">
-                  <Select value={editedIssue.isRecurring} onValueChange={(v) => handleChange("isRecurring", v)}>
-                    <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
+                  <Select value={editedIssue.isRecurring || "No"} onValueChange={(v) => handleChange("isRecurring", v)}>                    <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Yes">Yes</SelectItem>
                       <SelectItem value="No">No</SelectItem>
