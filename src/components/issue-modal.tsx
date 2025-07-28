@@ -361,7 +361,7 @@ const newDeadline = addWorkingDays(new Date(), daysToAdd)
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Manual Data Cleansing">Manual Data Cleansing</SelectItem>
-                        <SelectItem value="System Enhancement">System Enhancement</SelectItem>
+                        <SelectItem value="Software Improvement">Software Improvement</SelectItem>
                         <SelectItem value="Process Improvement">Process Improvement</SelectItem>
                       </SelectContent>
                     </Select>
