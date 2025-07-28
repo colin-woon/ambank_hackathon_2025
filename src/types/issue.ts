@@ -1,7 +1,6 @@
 export interface Issue {
   // Core Details
   id: string
-  ticketTitle: string
   description: string
   priority: "High" | "Medium" | "Low"
   mediaAttachments: string[]
@@ -27,19 +26,24 @@ export interface Issue {
 
   // Timestamps
   createdAt: Date
-  assignedAt?: Date
   pickedUpAt?: Date
+  assignedAt?: Date
   resolvedAt?: Date
   completedAt?: Date
   deadline: Date
 
-  // Key Issue Classification
+  // Aging Info
+  agingDays?: number
+  agingMonths?: number
+  agingBucket?: "0-6 months" | "7-18 months" | ">18 months"
+
+  // Issue Classification
   dataClass?: string
   criticalDataElement?: "Yes" | "No"
   dqIssueCategory?: string
   issueField?: string
-  problemCategory?: string 
-  isRecurring?: string
+  problemCategory?: string
+  isRecurring?: boolean
 
   // RCA & Impact
   rcaCategory?: string
@@ -52,17 +56,21 @@ export interface Issue {
   impactedRecordTotal?: number
   cleansedRecordTotal?: number
   excludedRecordTotal?: number
-  outstandingRecordTotal?: number // This will be calculated
+  outstandingRecordTotal?: number // Should be derived (reported - cleansed - excluded)
+  percentTotal?: string            // e.g. "25%"
 
   // Notes & Remarks
   extraRemarks?: string
   systemEnhancementNotes?: string
 
-  // AI Co-Pilot Generated Fields
+  // AI Co-Pilot
   aiSuggestions?: {
     impactScore: number
     complexityScore: number
     totalScore: number
-    suggestedPriority: string
+    suggestedPriority: "High" | "Medium" | "Low"
   }
+
+  // Working days calculation (based on totalScore)
+  workingDays?: number
 }

@@ -53,6 +53,12 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     setEditedIssue(issue)
   }, [issue])
 
+    useEffect(() => {
+    if (!isOpen && issue) {
+      setEditedIssue(issue)
+    }
+  }, [isOpen, issue])
+  
   const handleChange = (field: keyof Issue, value: any) => {
     if (editedIssue) {
       setEditedIssue({ ...editedIssue, [field]: value })
@@ -105,7 +111,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
           <DialogTitle className="flex items-center justify-between pr-6">
             <div className="flex items-center gap-3 text-xl">
               <span className="text-red-600">{editedIssue.id}</span>
-              <span className="text-gray-700 font-medium">{editedIssue.ticketTitle}</span>
+              <span className="text-gray-700 font-medium">{editedIssue.description}</span>
             </div>
             <div className="flex items-center gap-4">
               <Badge variant={editedIssue.priority === "High" ? "destructive" : "secondary"}>{editedIssue.priority}</Badge>
@@ -202,7 +208,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
             <Section title="Extra Remarks">
                 <Textarea value={editedIssue.extraRemarks || ""} onChange={(e) => handleChange("extraRemarks", e.target.value)} rows={4} />
             </Section>
-            
+
             <Section title="System Enhancement / Process Improvement Notes">
                 <Textarea value={editedIssue.systemEnhancementNotes || ""} onChange={(e) => handleChange("systemEnhancementNotes", e.target.value)} rows={4} />
             </Section>
