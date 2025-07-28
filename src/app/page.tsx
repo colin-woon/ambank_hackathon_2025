@@ -3,122 +3,20 @@
 import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { IssueTable } from "@/components/issue-table"
-import { StewardDashboard } from "@/components/steward-dashboard"
 import { Button } from "@/components/ui/button"
-import { Plus, Users, Kanban } from "lucide-react"
+import { Plus, Users, Kanban, Search } from "lucide-react"
 import { CreateIssueModal } from "@/components/create-issue-modal"
 import { IssueModal } from "@/components/issue-modal"
 import type { Issue } from "@/types/issue"
-import Login from "@/components/login"
-
-// Mock data for demonstration
-const mockIssues: Issue[] = [
-  {
-    id: "SR3349140",
-    ticketTitle: "Inconsistent Customer Data Format",
-    description: "Customer names appearing in different formats across systems",
-    priority: "High",
-    status: "new",
-    requesterName: "John Doe",
-    requesterContact: "+60123456789",
-    requesterDepartment: "IT",
-    requesterUnit: "Data Management",
-    sourceSystem: "Core Banking",
-    impactedArea: "Customer Database",
-    createdAt: new Date("2024-01-15"),
-    assignedAt: new Date("2024-01-15"),
-    deadline: new Date("2024-02-15"),
-    createdByUid: "user1",
-    dqPicUid: "",
-    itPicUid: "",
-    mediaAttachments: [],
-    dqIssueCategory: "Inconsistent value",
-    problemCategory: "Data Format Issues",
-    isRecurring: true,
-    reportedRecordTotal: 1500,
-    impactedRecordTotal: 1200,
-    cleansedRecordTotal: 800,
-    aiSuggestions: {
-      impactScore: 4,
-      complexityScore: 3,
-      totalScore: 7,
-      suggestedPriority: "High",
-    },
-  },
-  {
-    id: "SR3349141",
-    ticketTitle: "Missing Transaction Records",
-    description: "Some transaction records are not appearing in daily reports",
-    priority: "Medium",
-    status: "in_progress",
-    requesterName: "Jane Smith",
-    requesterContact: "+60123456788",
-    requesterDepartment: "Operations",
-    requesterUnit: "Transaction Processing",
-    sourceSystem: "Payment Gateway",
-    impactedArea: "Transaction Reports",
-    createdAt: new Date("2024-01-10"),
-    assignedAt: new Date("2024-01-15"),
-    deadline: new Date("2024-02-10"),
-    createdByUid: "user2",
-    dqPicUid: "steward1",
-    itPicUid: "it1",
-    mediaAttachments: [],
-    dqIssueCategory: "Blank value",
-    problemCategory: "Data Completeness",
-    isRecurring: false,
-    reportedRecordTotal: 500,
-    impactedRecordTotal: 50,
-    cleansedRecordTotal: 0,
-    aiSuggestions: {
-      impactScore: 3,
-      complexityScore: 2,
-      totalScore: 5,
-      suggestedPriority: "Medium",
-    },
-  },
-  {
-    id: "SR3349142",
-    ticketTitle: "Duplicate Account Entries",
-    description: "Multiple account entries found for the same customer",
-    priority: "Low",
-    status: "monitoring",
-    requesterName: "Mike Johnson",
-    requesterContact: "+60123456787",
-    requesterDepartment: "Customer Service",
-    requesterUnit: "Account Management",
-    sourceSystem: "CRM System",
-    impactedArea: "Customer Accounts",
-    createdAt: new Date("2024-01-05"),
-    assignedAt: new Date("2024-01-15"),
-    deadline: new Date("2024-02-05"),
-    createdByUid: "user3",
-    dqPicUid: "steward1",
-    itPicUid: "it2",
-    mediaAttachments: [],
-    dqIssueCategory: "Duplicate value",
-    problemCategory: "Data Duplication",
-    isRecurring: true,
-    reportedRecordTotal: 200,
-    impactedRecordTotal: 100,
-    cleansedRecordTotal: 90,
-    aiSuggestions: {
-      impactScore: 2,
-      complexityScore: 2,
-      totalScore: 4,
-      suggestedPriority: "Low",
-    },
-  },
-]
+import { AnalysisDashboard } from "@/components/analysis-dashboard"
+import { ResolutionDashboard } from "@/components/resolution-dashboard"
+import { mockIssues } from "@/lib/mock-data"
 
 export default function HomePage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [issues, setIssues] = useState<Issue[]>(mockIssues)
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false)
-
-  if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />
 
   const handleCreateIssue = (newIssue: Omit<Issue, "id" | "createdAt">) => {
     const issue: Issue = {
@@ -159,14 +57,18 @@ export default function HomePage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="table" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="table" className="flex items-center space-x-2">
               <Users className="w-4 h-4" />
               <span>Data Quality & IT View</span>
             </TabsTrigger>
-            <TabsTrigger value="kanban" className="flex items-center space-x-2">
+            <TabsTrigger value="analysis" className="flex items-center space-x-2">
+              <Search className="w-4 h-4" />
+              <span>Analysis Dashboard</span>
+            </TabsTrigger>
+            <TabsTrigger value="resolution" className="flex items-center space-x-2">
               <Kanban className="w-4 h-4" />
-              <span>Data Steward Dashboard</span>
+              <span>Resolution Dashboard</span>
             </TabsTrigger>
           </TabsList>
 
@@ -174,8 +76,12 @@ export default function HomePage() {
             <IssueTable issues={issues} onIssueClick={handleIssueClick} />
           </TabsContent>
 
-          <TabsContent value="kanban">
-            <StewardDashboard issues={issues} onIssueClick={handleIssueClick} onUpdateIssue={handleUpdateIssue} />
+          <TabsContent value="analysis">
+            <AnalysisDashboard issues={issues} onIssueClick={handleIssueClick} onUpdateIssue={handleUpdateIssue} />
+          </TabsContent>
+
+          <TabsContent value="resolution">
+            <ResolutionDashboard issues={issues} onIssueClick={handleIssueClick} onUpdateIssue={handleUpdateIssue} />
           </TabsContent>
         </Tabs>
       </main>
