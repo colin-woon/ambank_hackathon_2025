@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import { AlertCircle, Bot, Calendar, CheckCircle, Clock, Cpu, GitCommit, GitMerge, HardDrive, HelpCircle, Target, XCircle } from "lucide-react"
 
 interface IssueModalProps {
@@ -65,7 +66,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     }
   }
 
-  const { agingDays, agingMonths, agingBucket, outstanding, percentCleansed } = useMemo(() => {
+  const { agingDays, agingMonths, agingBucket, outstanding, percentCleansed, percentCleansedValue } = useMemo(() => {
     if (!issue)
       return {
         agingDays: 0,
@@ -73,6 +74,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
         agingBucket: "N/A",
         outstanding: 0,
         percentCleansed: "0.00%",
+        percentCleansedValue: 0,
       }
 
     const now = new Date()
@@ -88,9 +90,10 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     const cleansed = issue.cleansedRecordTotal || 0
     const excluded = issue.excludedRecordTotal || 0
     const out = impacted - cleansed - excluded
-    const perc = impacted > 0 ? ((cleansed / impacted) * 100).toFixed(2) + "%" : "0.00%"
+    const percentValue = impacted > 0 ? (cleansed / impacted) * 100 : 0
+    const perc = percentValue.toFixed(0) + "%"
 
-    return { agingDays: days, agingMonths: months, agingBucket: bucket, outstanding: out, percentCleansed: perc }
+    return { agingDays: days, agingMonths: months, agingBucket: bucket, outstanding: out, percentCleansed: perc, percentCleansedValue: percentValue }
   }, [issue])
 
   if (!isOpen || !editedIssue) return null
@@ -126,10 +129,10 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     <SelectContent>
                       <SelectItem value="new">New</SelectItem>
                       <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="monitoring">Monitoring</SelectItem>
                       <SelectItem value="cleansing">Cleansing</SelectItem>
+                      <SelectItem value="enhancing">Enhancing</SelectItem>
+                      <SelectItem value="monitoring">Monitoring</SelectItem>
                       <SelectItem value="closed">Closed</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
                     </SelectContent>
                   </Select>
                 </Field>
@@ -246,12 +249,14 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     <Field label="Cleansed"><Input type="number" value={editedIssue.cleansedRecordTotal || ""} onChange={(e) => handleChange("cleansedRecordTotal", parseInt(e.target.value))} /></Field>
                     <Field label="Excluded"><Input type="number" value={editedIssue.excludedRecordTotal || ""} onChange={(e) => handleChange("excludedRecordTotal", parseInt(e.target.value))} /></Field>
                 </div>
-                <div className="space-y-2 pt-2 border-t mt-4">
-                    <InfoField label="Outstanding" value={outstanding} />
-                    <InfoField label="% Cleansed" value={percentCleansed} />
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                    <Field label="Outstanding"><Input readOnly value={outstanding} /></Field>
+                    <Field label="% Cleansed"><Input readOnly value={percentCleansed} /></Field>
                 </div>
-            </Section>
-          </div>
+                <div className="mt-4">
+                  <Progress value={percentCleansedValue} className="h-3 [&>*]:bg-green-500" />
+                </div>
+            </Section>          </div>
         </div>
 
         <DialogFooter>
