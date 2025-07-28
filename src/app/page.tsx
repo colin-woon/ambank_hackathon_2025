@@ -60,7 +60,7 @@ export default function HomePage() {
           <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="table" className="flex items-center space-x-2">
               <Users className="w-4 h-4" />
-              <span>Data Quality & IT View</span>
+              <span>Overview</span>
             </TabsTrigger>
             <TabsTrigger value="analysis" className="flex items-center space-x-2">
               <Search className="w-4 h-4" />
