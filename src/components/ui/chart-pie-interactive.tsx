@@ -3,7 +3,6 @@
 import * as React from "react"
 import { Label, Pie, PieChart, Sector } from "recharts"
 import { PieSectorDataItem } from "recharts/types/polar/Pie"
-import CountUp from "@/components/TextAnimations/CountUp/CountUp"
 
 import {
   Card,
@@ -43,73 +42,20 @@ export function ChartPieInteractive({
   id,
   unitLabel = "Total",
 }: ChartPieInteractiveProps) {
-  const [activeItem, setActiveItem] = React.useState(data[0]?.[nameKey])
-
-  React.useEffect(() => {
-    if (data.length > 0 && activeItem === undefined) {
-      setActiveItem(data[0][nameKey])
-    }
-  }, [data, activeItem, nameKey])
+  const [activeItem, setActiveItem] = React.useState(data[0][nameKey])
 
   const activeIndex = React.useMemo(
     () => data.findIndex((item) => item[nameKey] === activeItem),
     [activeItem, data, nameKey]
   )
 
-  if (data.length === 0) {
-    return (
-      <Card data-chart={id} className="flex flex-col h-full">
-        <CardHeader className="items-start pb-0">
-          <div className="grid gap-1">
-            <CardTitle>{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="flex flex-1 items-center justify-center pb-0">
-          <div className="text-muted-foreground">No data to display</div>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
     <Card data-chart={id} className="flex flex-col h-full">
       <ChartStyle id={id} config={chartConfig} />
       <CardHeader className="items-start pb-0">
-        <div className="grid lg:text-5xl">
+        <div className="grid gap-1">
           <CardTitle>{title}</CardTitle>
-          <CardDescription className="lg:text-2xl">{description}</CardDescription>
-        </div>
-         <div className="grid grid-cols-2 gap-10 place-items-center pt-15">
-          {data
-            .filter((item) => item[nameKey] !== "closed")
-            .map((item) => {
-              const status = item[nameKey];
-              const value = item[dataKey];
-              const config = chartConfig[status] || {};
-              const label = config.label || status.replace(/_/g, " ");
-              const color = config.color;
-
-              return (
-                <div key={status} className="flex flex-col items-center">
-                  <CountUp
-                    from={0}
-                    to={value}
-                    separator=","
-                    direction="up"
-                    duration={2}
-                    className="count-up-text lg:text-8xl font-bold"
-                    style={{ color }}
-                  />
-                  <p
-                    className={`font-bold lg:text-4xl capitalize`}
-                    style={{ color }}
-                  >
-                    {label}
-                  </p>
-                </div>
-              );
-            })}
+          <CardDescription>{description}</CardDescription>
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 items-center justify-center pb-0">
