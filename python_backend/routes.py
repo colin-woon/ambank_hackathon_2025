@@ -1,9 +1,14 @@
 import logging
 from fastapi import APIRouter, HTTPException
-from models import IssueRequest, DuplicateDetectionResponse, HealthResponse, AddIssueResponse
+from models import IssueRequest, DuplicateDetectionResponse, HealthResponse #, AddIssueResponse
 from detector import DuplicateDetector
 
+from models import PriorityScoreRequest, PriorityScoreResponse
+from priority_score import PriorityScorer
+
 logger = logging.getLogger(__name__)
+
+# ========== DUPLICATE DETECTION ==========
 
 # Global detector instance
 detector: DuplicateDetector = None
@@ -19,9 +24,9 @@ router = APIRouter()
 @router.get("/", response_model=HealthResponse)
 async def root():
     """Health check endpoint"""
-    return HealthResponse(status="healthy", message="Issue Tracker Duplicate Detection API is running")
+    return HealthResponse(status="healthy", message="API is running")
 
-@router.get("/health", response_model=HealthResponse)
+@router.get("/chromadb", response_model=HealthResponse)
 async def health_check():
     """Detailed health check"""
     try:
@@ -47,15 +52,28 @@ async def detect_duplicates(request: IssueRequest):
         logger.error(f"Error processing duplicate detection request: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/add-issue", response_model=AddIssueResponse)
-async def add_issue(request: IssueRequest):
-    """Add a new issue to the knowledge base (for future duplicate detection)"""
-    if not detector:
-        raise HTTPException(status_code=500, detail="Duplicate detector not initialized")
+# @router.post("/add-issue", response_model=AddIssueResponse)
+# async def add_issue(request: IssueRequest):
+#     """Add a new issue to the knowledge base (for future duplicate detection)"""
+#     if not detector:
+#         raise HTTPException(status_code=500, detail="Duplicate detector not initialized")
 
+#     try:
+#         message = detector.add_issue(request.id, request.description)
+#         return AddIssueResponse(message=message)
+#     except Exception as e:
+#         logger.error(f"Error adding issue to knowledge base: {str(e)}")
+#         raise HTTPException(status_code=500, detail=str(e))
+
+# ========== DUPLICATE DETECTION ==========
+
+scorer = PriorityScorer()
+
+@router.post("/suggest-priority-score", response_model=PriorityScoreResponse)
+async def suggest_priority_score(request: PriorityScoreRequest):
+    """Suggest priority score for a data quality issue"""
     try:
-        message = detector.add_issue(request.id, request.description)
-        return AddIssueResponse(message=message)
+        result = scorer.get_priority_score(request)
+        return result
     except Exception as e:
-        logger.error(f"Error adding issue to knowledge base: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

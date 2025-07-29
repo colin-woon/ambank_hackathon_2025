@@ -80,17 +80,17 @@ class ApiService {
   /**
    * Add a new issue to the knowledge base
    */
-  async addIssue(issue: IssueRequest): Promise<{ message: string }> {
-    const response = await fetch(`${this.baseUrl}/add-issue`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(issue),
-    });
+  // async addIssue(issue: IssueRequest): Promise<{ message: string }> {
+  //   const response = await fetch(`${this.baseUrl}/add-issue`, {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: JSON.stringify(issue),
+  //   });
 
-    return this.handleResponse<{ message: string }>(response);
-  }
+  //   return this.handleResponse<{ message: string }>(response);
+  // }
 
   /**
    * Basic connectivity test

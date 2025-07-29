@@ -13,6 +13,13 @@ import { Progress } from "@/components/ui/progress"
 import { AlertCircle, Bot, Calendar, CheckCircle, Clock, Cpu, GitBranch, GitBranchIcon, GitCommit, GitCommitHorizontalIcon, GitMerge, GitPullRequest, GitPullRequestArrowIcon, HardDrive, HelpCircle, Target, XCircle } from "lucide-react"
 import { getWorkingDaysBetween, getAgingBucket } from "@/lib/utils"
 
+import DetectDuplicateButton from '@/components/duplicate-detection-button';
+import ResultsModal from '@/components/duplicate-result-modal';
+import { DuplicateDetectionResponse } from '@/types/duplicate-detection';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
+import PriorityScoreCard from "./priority-score-card"
+
 interface IssueModalProps {
   issue: Issue | null
   isOpen: boolean
@@ -52,6 +59,9 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
   const [agingDays, setAgingDays] = useState<number | null>(null);
   const [agingMonths, setAgingMonths] = useState<number | null>(null);
   const [agingBucket, setAgingBucket] = useState<string | null>(null);
+  const [result, setResult] = useState<DuplicateDetectionResponse | null>(null);
+  const [error, setError] = useState<string>('');
+  const [showModal, setShowModal] = useState(false);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
 
   useEffect(() => {
@@ -75,6 +85,18 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     setAgingBucket(getAgingBucket(months));
   }, [editedIssue?.assignedAt]);
 
+  const handleResult = (newResult: DuplicateDetectionResponse) => {
+    setResult(newResult);
+    setShowModal(true);
+  };
+
+  const handleError = (errorMessage: string) => {
+    setError(errorMessage);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+  };
 
   useEffect(() => {
     setEditedIssue(issue)
@@ -175,7 +197,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
           {/* Left Column */}
           <div className="col-span-2 space-y-4">
             <Section title="Core Details">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-2">
                 <Field label="Status">
                   <Select value={editedIssue.status} onValueChange={(v) => handleChange("status", v)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -190,6 +212,34 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     </SelectContent>
                   </Select>
                 </Field>
+
+                <div className="flex items-center gap-6 mt-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="systemEnhancement"
+                      checked={editedIssue.systemEnhancement === "yes"}
+                      onChange={(e) =>
+                        handleChange("systemEnhancement", e.target.checked ? "yes" : "no")
+                      }
+                      className="accent-red-600"
+                    />
+                    <Label htmlFor="systemEnhancement">System Enhancement</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="processImprovement"
+                      checked={editedIssue.processImprovement === "yes"}
+                      onChange={(e) =>
+                        handleChange("processImprovement", e.target.checked ? "yes" : "no")
+                      }
+                      className="accent-red-600"
+                    />
+                    <Label htmlFor="processImprovement">Process Improvement</Label>
+                  </div>
+                </div>
+
                 <div className="flex justify-end items-end gap-3">
                 <Field label="Recurring">
                   <Select value={editedIssue.isRecurring || "No"} onValueChange={(v) => handleChange("isRecurring", v)}>                    <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
@@ -317,7 +367,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
           {/* Right Column */}
           <div className="col-span-1 space-y-4">
             <Section title="AI Co-Pilot" icon={<Bot className="text-red-600" />}>
-              <Button className="w-full bg-red-600 hover:bg-red-700">Analyze with AI</Button>
+              {/* <Button className="w-full bg-red-600 hover:bg-red-700">Calculate Priority Score</Button>
               <div className="flex justify-around text-center p-2 bg-white rounded-lg">
                 <div>
                   <input
@@ -364,11 +414,33 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 {editedIssue.aiSuggestions?.suggestedPriority || "N/A"}
                 <div className="text-xs font-normal">Suggested Priority</div>
               </div>
-              <Button variant="outline" className="w-full">Detect Duplicates</Button>
               <div className="flex items-center text-sm text-yellow-600 p-2 bg-yellow-50 rounded-md">
                 <AlertCircle className="w-4 h-4 mr-2" />
-                AI analysis might take a few moments.
-              </div>
+                Priority score calculation might take a few moments.
+              </div> */}
+              <PriorityScoreCard editedIssue={editedIssue} setEditedIssue={setEditedIssue} />
+
+              <DetectDuplicateButton
+                issueId={editedIssue.id}
+                issueDescription={editedIssue.description}
+                onResult={handleResult}
+                onError={handleError}
+              />
+              {/* Error Display */}
+              {error && (
+                <Alert className="mb-6 border-red-200 bg-red-50">
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <AlertDescription className="text-red-800">
+                    {error}
+                  </AlertDescription>
+                </Alert>
+              )}
+              <ResultsModal
+                isOpen={showModal}
+                onClose={closeModal}
+                result={result}
+              />
+
             </Section>
 
             <Section title="Assignment & Timeline" icon={<Clock className="text-red-600" />}>
