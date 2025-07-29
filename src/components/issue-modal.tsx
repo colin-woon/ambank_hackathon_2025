@@ -126,11 +126,11 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
         case "resolving":
           updates.assignedAt = editedIssue.assignedAt ?? now
           break
-        case "resolved":
-          updates.resolvedAt = editedIssue.resolvedAt ?? now
-          break
-        case "monitoring":
-          updates.completedAt = editedIssue.completedAt ?? now
+          case "monitoring":
+            updates.resolvedAt = editedIssue.resolvedAt ?? now
+            break
+        case "closed":
+          updates.closedAt = editedIssue.closedAt ?? now
           break
       }
     }
@@ -251,7 +251,6 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                         <SelectItem value="resolving">Resolving</SelectItem>
                         <SelectItem value="monitoring">Monitoring</SelectItem>
                         <SelectItem value="closed">Closed</SelectItem>
-                        {/* <SelectItem value="resolved">Resolved</SelectItem> */}
                       </SelectContent>
                     </Select>
                   </Field>
@@ -553,24 +552,24 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   </span>
                 </div>
 
-                {/* Completed - set when status changes to 'closed' */}
-                <div className="flex items-center text-sm text-gray-600 gap-x-2">
-                  <XCircle className="w-4 h-4 text-gray-500" />
-                  <span className="font-medium">Completed:</span>
-                  <span>
-                    {editedIssue.completedAt
-                      ? new Date(editedIssue.completedAt).toLocaleDateString("en-GB")
-                      : "N/A"}
-                  </span>
-                </div>
-
-                {/* Resolved - set when status changes to 'resolved' */}
+                {/* Resolved - set when status changes to 'monitoring' */}
                 <div className="flex items-center text-sm text-gray-600 gap-x-2">
                   <CheckCircle className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">Resolved:</span>
                   <span>
                     {editedIssue.resolvedAt
                       ? new Date(editedIssue.resolvedAt).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </span>
+                </div>
+
+                {/* Closed - set when status changes to 'closed' */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <XCircle className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Closed:</span>
+                  <span>
+                    {editedIssue.closedAt
+                      ? new Date(editedIssue.closedAt).toLocaleDateString("en-GB")
                       : "N/A"}
                   </span>
                 </div>

@@ -23,6 +23,13 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
   key: "createdAt",
   direction: "desc",
 })
+  const formatDate = (date: any) => {
+    if (!date) return "N/A";
+    if (date instanceof Date) return date.toLocaleDateString("en-GB");
+    if (date.seconds) return new Date(date.seconds * 1000).toLocaleDateString("en-GB");
+    return "Invalid";
+  };
+
 
   const filteredIssues = useMemo(
     () =>
@@ -55,14 +62,14 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
     if (value.seconds) return value.seconds * 1000; // Firestore timestamp
     return -1; // Invalid format case
   };
-  
+
   const aTime = getTimeValue(aValue);
   const bTime = getTimeValue(bValue);
-  
+
   // If one value exists but the other doesn't, prioritize the existing one
   if (aTime === -1 && bTime !== -1) return 1; // Push a (N/A) to the end
   if (aTime !== -1 && bTime === -1) return -1; // Push b (N/A) to the end
-  
+
   // Normal comparison when both values exist
   return sortConfig.direction === "asc" ? aTime - bTime : bTime - aTime;
 }
@@ -229,22 +236,27 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
                   {issue.impactedArea}
                 </TableCell>
                 <TableCell>
-                  {issue.pickedUpAt ? 
-                    (issue.pickedUpAt instanceof Date ? 
-                      issue.pickedUpAt.toLocaleDateString("en-GB") : 
+                  {issue.pickedUpAt ?
+                    (issue.pickedUpAt instanceof Date ?
+                      issue.pickedUpAt.toLocaleDateString("en-GB") :
                       // Handle Firestore timestamp
                       new Date(issue.pickedUpAt.seconds * 1000).toLocaleDateString("en-GB")
                     ) : "N/A"}
-                </TableCell>                
+                </TableCell>
                 <TableCell>
-                  {issue.deadline ? 
-                    (issue.deadline instanceof Date ? 
-                      issue.deadline.toLocaleDateString("en-GB") : 
+                  {issue.deadline ?
+                    (issue.deadline instanceof Date ?
+                      issue.deadline.toLocaleDateString() :
+                  {issue.deadline ?
+                    (issue.deadline instanceof Date ?
+                      issue.deadline.toLocaleDateString("en-GB") :
                       // Handle Firestore timestamp
                       new Date(issue.deadline.seconds * 1000).toLocaleDateString("en-GB")
                     ) : "N/A"}
-                </TableCell>                
-<TableCell>{issue.agingDays || "N/A"}</TableCell>
+                </TableCell>
+                <TableCell>
+                  {issue.agingDays || "N/A"}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

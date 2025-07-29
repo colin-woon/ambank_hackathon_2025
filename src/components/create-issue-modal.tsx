@@ -1,5 +1,6 @@
 "use client"
 
+import { createIssueInFirestore } from "@/lib/firestore"
 import type React from "react"
 import type { OurFileRouter } from "@/app/api/uploadthing/core"
 import { useState } from "react"
@@ -70,41 +71,44 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const now = new Date()
 
-  const newIssue: Omit<Issue, "id"> = {
-  // core fields
-  description: formData.description,
-  requesterName: formData.requesterName,
-  requesterContact: formData.requesterContact,
-  requesterDepartment: formData.requesterDepartment,
-  requesterUnit: formData.requesterUnit,
-  sourceSystem: formData.sourceSystem,
-  impactedArea: formData.impactedArea,
-  priority: "N/A",
-  status: "new",
-  createdByUid: "current-user",
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now,
-  mediaUrls,
+    const newIssue: Omit<Issue, "id"> = {
+      description: formData.description,
+      requesterName: formData.requesterName,
+      requesterContact: formData.requesterContact,
+      requesterDepartment: formData.requesterDepartment,
+      requesterUnit: formData.requesterUnit,
+      sourceSystem: formData.sourceSystem,
+      impactedArea: formData.impactedArea,
+      priority: "N/A",
+      status: "new",
+      createdByUid: "current-user",
+      createdAt: now,
+      updatedAt: now,
+      deadline: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000), // 30 days later
+      mediaUrls,
+      pickedUpAt: undefined,
+      assignedAt: undefined,
+      resolvedAt: undefined,
+      closedAt: undefined,
+      agingDays: undefined,
+      agingMonths: undefined,
+      agingBucket: undefined,
+    }
 
-  // optional timestamp fields
-  pickedUpAt: undefined,
-  assignedAt: undefined,
-  resolvedAt: undefined,
-  completedAt: undefined,
+    try {
+      const createdIssue = await createIssueInFirestore(newIssue)
+      onSubmit(createdIssue) // pass the full object (including the generated id)
+    } catch (err) {
+      console.error("Failed to create issue in Firestore:", err)
+      alert("Failed to save issue. Please try again.")
+      return
+    }
 
-  // aging fields
-  agingDays: undefined,
-  agingMonths: undefined,
-  agingBucket: undefined,
-}
-
-    onSubmit(newIssue)
-
+    // Reset form
     setFormData({
       description: "",
       requesterName: "",
@@ -116,7 +120,10 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
     })
     setMediaUrls([])
     setShowDuplicateWarning(false)
+    onClose()
   }
+
+
 
   const confirmCancel = () => {
     if (mediaUrls.length > 0 || uploading) {
