@@ -21,5 +21,5 @@ class HealthResponse(BaseModel):
     status: str
     message: str
 
-class AddIssueResponse(BaseModel):
-    message: str
+# class AddIssueResponse(BaseModel):
+#     message: str
