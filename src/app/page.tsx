@@ -24,7 +24,7 @@ export default function HomePage() {
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        const issuesCollection = collection(firestore, "issues");
+        const issuesCollection = collection(db, "issues");
         const issueSnapshot = await getDocs(issuesCollection);
         const issuesList = issueSnapshot.docs.map(doc => {
           const data = doc.data();

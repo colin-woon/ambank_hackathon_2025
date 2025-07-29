@@ -80,6 +80,14 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
     monitoring: filteredIssues.filter((i) => i.status === "monitoring"),
   }
 
+  Object.keys(grouped).forEach((key) => {
+    grouped[key as keyof typeof grouped].sort((a, b) => {
+      const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : 0
+      const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0
+      return aTime - bTime // oldest on top, newest on bottom
+    })
+  })
+
   const statusDetails: Record<string, { label: string; icon: React.ReactNode }> = {
     new: { label: "New", icon: <Clock className="w-5 h-5 mr-2 text-blue-600" /> },
     investigating: { label: "Investigating", icon: <FileSearch className="w-5 h-5 mr-2 text-green-600" /> },
@@ -166,8 +174,7 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
           </div>
         )}
 
-        {issue.systemEnhancement === "yes" && typeof issue.systemEnhancementScore === "number" && (issue.status === "resolving" || issue.status == "monitoring") &&
-        (
+        {issue.systemEnhancement === "yes" && typeof issue.systemEnhancementScore === "number" && (issue.status === "resolving" || issue.status == "monitoring") && (
           <div className="mb-2">
             <div className="text-xs text-gray-600 mb-1">System Enhancement Score: {issue.systemEnhancementScore}%</div>
             <Progress value={Math.min(100, issue.systemEnhancementScore)} className="h-2 [&>*]:bg-blue-500" />
