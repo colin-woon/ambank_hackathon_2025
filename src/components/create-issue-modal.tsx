@@ -30,6 +30,7 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
     impactedArea: "",
   })
 
+  const [mediaFiles, setMediaFiles] = useState<File[]>([])
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false)
   const [duplicateIssueId, setDuplicateIssueId] = useState("")
 
@@ -56,13 +57,14 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
 
     const newIssue: Omit<Issue, "id" | "createdAt"> = {
       ...formData,
+      priority: "N/A",
       status: "new",
       createdByUid: "current-user",
       dqPicUid: "",
-      itPicUid: "",
       assignedAt: now,
       deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      mediaAttachments: [],
+      mediaFiles,
+      mediaUrls: uploadedUrls,
     }
 
     onSubmit(newIssue)
@@ -77,7 +79,6 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
       sourceSystem: "",
       impactedArea: "",
     })
-    setShowDuplicateWarning(false)
   }
 
   return (
@@ -157,6 +158,28 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
                 onChange={(e) => handleInputChange("impactedArea", e.target.value)}
                 required
               />
+            </div>
+            <div>
+              <Label className="font-semibold">Media Attachment</Label>
+              <Input
+                type="file"
+                multiple
+                className="mt-1"
+                onChange={(e) => {
+                  if (e.target.files) {
+                    const filesArray = Array.from(e.target.files)
+                    setMediaFiles(filesArray)
+                    console.log("Selected files:", filesArray)
+                  }
+                }}
+              />
+               {mediaFiles.length > 0 && (
+                  <div className="mt-2 space-y-1 text-sm text-gray-600">
+                    {mediaFiles.map((file, idx) => (
+                      <div key={idx} className="truncate">{file.name}</div>
+                    ))}
+                  </div>
+                )}
             </div>
           </div>
 
