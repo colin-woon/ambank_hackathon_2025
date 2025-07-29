@@ -87,7 +87,7 @@ export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
                     <UserCircle className="w-16 h-16 mx-auto text-gray-400" />
                     <p className="font-semibold mt-2">{item.dsPicUid || 'N/A'}</p>
                     <p className="text-sm text-red-600 font-mono">{item.id}</p>
-                    <p className="text-xs text-gray-500">Due: {item.deadline.toLocaleDateString()}</p>
+                    <p className="text-xs text-gray-500">Due: {item.deadline.toLocaleDateString("en-GB")}</p>
                 </div>
                 ))}
             </CardContent>

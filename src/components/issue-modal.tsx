@@ -229,7 +229,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
               <Badge variant="outline" className="border-blue-400 text-blue-600">{editedIssue.status.toUpperCase()}</Badge>
               <div className="text-sm text-gray-500 flex items-center gap-2">
                 <Target className="w-4 h-4" />
-                Deadline: {new Date(editedIssue.deadline).toLocaleDateString()}
+                Deadline: {new Date(editedIssue.deadline).toLocaleDateString("en-GB")}
               </div>
             </div>
           </DialogTitle>

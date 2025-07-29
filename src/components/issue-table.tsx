@@ -236,14 +236,22 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
                   {issue.impactedArea}
                 </TableCell>
                 <TableCell>
-                  {formatDate(issue.pickedUpAt)}
+                  {issue.pickedUpAt ?
+                    (issue.pickedUpAt instanceof Date ?
+                      issue.pickedUpAt.toLocaleDateString("en-GB") :
+                      // Handle Firestore timestamp
+                      new Date(issue.pickedUpAt.seconds * 1000).toLocaleDateString("en-GB")
+                    ) : "N/A"}
                 </TableCell>
                 <TableCell>
                   {issue.deadline ?
                     (issue.deadline instanceof Date ?
                       issue.deadline.toLocaleDateString() :
+                  {issue.deadline ?
+                    (issue.deadline instanceof Date ?
+                      issue.deadline.toLocaleDateString("en-GB") :
                       // Handle Firestore timestamp
-                      new Date(issue.deadline.seconds * 1000).toLocaleDateString()
+                      new Date(issue.deadline.seconds * 1000).toLocaleDateString("en-GB")
                     ) : "N/A"}
                 </TableCell>
                 <TableCell>
