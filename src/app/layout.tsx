@@ -10,8 +10,11 @@ import { ourFileRouter } from "@/app/api/uploadthing/core"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "AmBank Data Quality Platform",
+  title: "AmDash",
   description: "Smart centralized platform for data quality issue tracking",
+  icons: {
+    icon: "/amdash-logo-only.png",
+  },
 }
 
 export default function RootLayout({
