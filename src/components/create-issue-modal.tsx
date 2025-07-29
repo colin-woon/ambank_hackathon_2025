@@ -48,6 +48,7 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
     impactedArea: "",
   })
 
+  const [mediaFiles, setMediaFiles] = useState<File[]>([])
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false)
   const [duplicateIssueId, setDuplicateIssueId] = useState("")
   const [mediaUrls, setMediaUrls] = useState<string[]>([])
@@ -73,6 +74,32 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
     e.preventDefault()
     const now = new Date()
 
+  const newIssue: Omit<Issue, "id"> = {
+  // core fields
+  description: formData.description,
+  requesterName: formData.requesterName,
+  requesterContact: formData.requesterContact,
+  requesterDepartment: formData.requesterDepartment,
+  requesterUnit: formData.requesterUnit,
+  sourceSystem: formData.sourceSystem,
+  impactedArea: formData.impactedArea,
+  priority: "N/A",
+  status: "new",
+  createdByUid: "current-user",
+  createdAt: new Date(),
+  deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+
+  // optional timestamp fields
+  pickedUpAt: undefined,
+  assignedAt: undefined,
+  resolvedAt: undefined,
+  completedAt: undefined,
+
+  // aging fields
+  agingDays: undefined,
+  agingMonths: undefined,
+  agingBucket: undefined,
+}
     const newIssue: Omit<Issue, "id" | "createdAt"> = {
       ...formData,
       status: "new",

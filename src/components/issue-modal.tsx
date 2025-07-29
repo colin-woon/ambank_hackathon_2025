@@ -12,6 +12,13 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { AlertCircle, Bot, Calendar, CheckCircle, Clock, Cpu, GitBranch, GitBranchIcon, GitCommit, GitCommitHorizontalIcon, GitMerge, GitPullRequest, GitPullRequestArrowIcon, HardDrive, HelpCircle, Target, XCircle } from "lucide-react"
 import { getWorkingDaysBetween, getAgingBucket } from "@/lib/utils"
+import { Slider } from "@/components/ui/slider"
+import DetectDuplicateButton from '@/components/duplicate-detection-button';
+import ResultsModal from '@/components/duplicate-result-modal';
+import { DuplicateDetectionResponse } from '@/types/duplicate-detection';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
+import PriorityScoreCard from "./priority-score-card"
 import { UploadButton } from "../lib/uploadthing"
 
 interface IssueModalProps {
@@ -53,6 +60,10 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
   const [agingDays, setAgingDays] = useState<number | null>(null);
   const [agingMonths, setAgingMonths] = useState<number | null>(null);
   const [agingBucket, setAgingBucket] = useState<string | null>(null);
+  const [result, setResult] = useState<DuplicateDetectionResponse | null>(null);
+  const [error, setError] = useState<string>('');
+  const [showModal, setShowModal] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (!editedIssue?.assignedAt) {
@@ -66,15 +77,30 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     const assigned = new Date(editedIssue.assignedAt);
 
     const days = getWorkingDaysBetween(assigned, now);
-    const months =
+    const months = Math.max(
+      0,
       (now.getFullYear() - assigned.getFullYear()) * 12 +
-      now.getMonth() - assigned.getMonth();
+      now.getMonth() - assigned.getMonth()
+    );
+
 
     setAgingDays(days);
     setAgingMonths(months);
     setAgingBucket(getAgingBucket(months));
   }, [editedIssue?.assignedAt]);
 
+  const handleResult = (newResult: DuplicateDetectionResponse) => {
+    setResult(newResult);
+    setShowModal(true);
+  };
+
+  const handleError = (errorMessage: string) => {
+    setError(errorMessage);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+  };
 
   useEffect(() => {
     setEditedIssue(issue)
@@ -87,17 +113,42 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
   }, [isOpen, issue])
 
   const handleChange = (field: keyof Issue, value: any) => {
-    if (editedIssue) {
-      setEditedIssue({ ...editedIssue, [field]: value })
+    if (!editedIssue) return
+    let updates: Partial<Issue> = { [field]: value }
+    if (field === "status") {
+      const now = new Date()
+
+      switch (value) {
+        case "investigating":
+          updates.pickedUpAt = editedIssue.pickedUpAt ?? now
+          break
+        case "resolving":
+          updates.assignedAt = editedIssue.assignedAt ?? now
+          break
+        case "resolved":
+          updates.resolvedAt = editedIssue.resolvedAt ?? now
+          break
+        case "monitoring":
+          updates.completedAt = editedIssue.completedAt ?? now
+          break
+      }
     }
+
+    setEditedIssue({ ...editedIssue, ...updates })
   }
 
-  const handleSaveChanges = () => {
-    if (editedIssue) {
-      onUpdate(editedIssue)
-      onClose()
+
+  const handleSaveChanges = async () => {
+    if (!editedIssue) return
+
+    const updatedIssue = {
+      ...editedIssue,
     }
+
+    onUpdate(updatedIssue)
+    onClose()
   }
+
 
   const { outstanding, percentCleansed, percentCleansedValue } = useMemo(() => {
     if (!editedIssue)
@@ -112,7 +163,9 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     const excluded = editedIssue.excludedRecordTotal || 0
 
     const outstanding = impacted - cleansed - excluded
-    const percentCleansedValue = impacted > 0 ? ((impacted - outstanding) / impacted) * 100 : 0
+    const percentCleansedValue = impacted > 0
+      ? Math.min(100, ((impacted - outstanding) / impacted) * 100)
+      : 0
     const percentCleansed = percentCleansedValue.toFixed(0) + "%"
 
     return {
@@ -135,10 +188,27 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
           <DialogTitle className="flex items-center justify-between pr-6">
             <div className="flex items-center gap-3 text-xl">
               <span className="text-red-600">{editedIssue.id}</span>
-              <span className="text-gray-700 font-medium">{editedIssue.description}</span>
+              <span className="text-gray-700 font-medium line-clamp-1">{editedIssue.description}</span>
             </div>
             <div className="flex items-center gap-4">
-              <Badge variant={editedIssue.priority === "High" ? "destructive" : "secondary"}>{editedIssue.priority}</Badge>
+              <span
+                className={`text-xs font-semibold px-3 py-1 rounded-full text-white transition-colors duration-500
+                  ${
+                    editedIssue.priority === "Super High"
+                      ? "bg-red-600 hover:bg-red-700"
+                      : editedIssue.priority === "High"
+                      ? "bg-orange-500 hover:bg-orange-600"
+                      : editedIssue.priority === "Medium"
+                      ? "bg-yellow-500 hover:bg-yellow-600 text-black"
+                      : editedIssue.priority === "Low"
+                      ? "bg-green-500 hover:bg-green-600"
+                      : "bg-gray-400 hover:bg-gray-500"
+                  }
+                `}
+              >
+                {editedIssue.priority}
+              </span>
+
               <Badge variant="outline" className="border-blue-400 text-blue-600">{editedIssue.status.toUpperCase()}</Badge>
               <div className="text-sm text-gray-500 flex items-center gap-2">
                 <Target className="w-4 h-4" />
@@ -152,40 +222,71 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
           {/* Left Column */}
           <div className="col-span-2 space-y-4">
             <Section title="Core Details">
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Status">
-                  <Select value={editedIssue.status} onValueChange={(v) => handleChange("status", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="investigating">Investigating</SelectItem>
-                      <SelectItem value="cleansing">Cleansing</SelectItem>
-                      <SelectItem value="enhancing">Enhancing</SelectItem>
-                      <SelectItem value="monitoring">Monitoring</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
-                      <SelectItem value="resolved">Resolved</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
+              <div className="grid grid-cols-2 gap-2">
+
+                <div className="grid grid-cols-2 gap-0">
+                  <Field label="Status">
+                    <Select value={editedIssue.status} onValueChange={(v) => handleChange("status", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="investigating">Investigating</SelectItem>
+                        <SelectItem value="resolving">Resolving</SelectItem>
+                        <SelectItem value="monitoring">Monitoring</SelectItem>
+                        <SelectItem value="closed">Closed</SelectItem>
+                        {/* <SelectItem value="resolved">Resolved</SelectItem> */}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                    <div className="flex items-center gap-6 mt-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="systemEnhancement"
+                          checked={editedIssue.systemEnhancement === "yes"}
+                          onChange={(e) =>
+                            handleChange("systemEnhancement", e.target.checked ? "yes" : "no")
+                          }
+                          className="accent-red-600"
+                        />
+                        <Label htmlFor="systemEnhancement">System Enhancement</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="processImprovement"
+                          checked={editedIssue.processImprovement === "yes"}
+                          onChange={(e) =>
+                            handleChange("processImprovement", e.target.checked ? "yes" : "no")
+                          }
+                          className="accent-red-600"
+                        />
+                        <Label htmlFor="processImprovement">Process Improvement</Label>
+                      </div>
+                    </div>
+                </div>
+
                 <div className="flex justify-end items-end gap-3">
-                <Field label="Priority">
-                  <Select value={editedIssue.priority} onValueChange={(v) => handleChange("priority", v)}>
-                    <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="High">High</SelectItem>
-                      <SelectItem value="Medium">Medium</SelectItem>
-                      <SelectItem value="Low">Low</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field label="Recurring">
-                  <Select value={editedIssue.isRecurring || "No"} onValueChange={(v) => handleChange("isRecurring", v)}>                    <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
+                  <Field label="Priority">
+                    <Select value={editedIssue.priority || "N/A"} onValueChange={(v) => handleChange("priority", v)}>
+                      <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Super High">Super High</SelectItem>
+                        <SelectItem value="High">High</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="Low">Low</SelectItem>
+                        <SelectItem value="N/A">N/A</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field label="Recurring">
+                    <Select value={editedIssue.isRecurring || "No"} onValueChange={(v) => handleChange("isRecurring", v)}>                    <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
                 </div>
               </div>
               <Field label="Description">
@@ -234,8 +335,62 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 <Textarea value={editedIssue.extraRemarks || ""} onChange={(e) => handleChange("extraRemarks", e.target.value)} rows={4} />
             </Section>
 
-            <Section title="System Enhancement / Process Improvement Notes">
-                <Textarea value={editedIssue.systemEnhancementNotes || ""} onChange={(e) => handleChange("systemEnhancementNotes", e.target.value)} rows={4} />
+            {editedIssue.systemEnhancement === "yes" && (
+              <Section title="System Enhancement Notes">
+                <Textarea
+                  value={editedIssue.systemEnhancementNotes || ""}
+                  onChange={(e) => handleChange("systemEnhancementNotes", e.target.value)}
+                  rows={4}
+                />
+              </Section>
+            )}
+
+            {editedIssue.processImprovement === "yes" && (
+              <Section title="Process Improvement Notes">
+                <Textarea
+                  value={editedIssue.processImprovementNotes || ""}
+                  onChange={(e) => handleChange("processImprovementNotes", e.target.value)}
+                  rows={4}
+                />
+              </Section>
+            )}
+
+            <Section title="Add Media">
+              <div>
+                <Label className="font-semibold">Add Media</Label>
+                <Input
+                  type="file"
+                  multiple
+                  className="mt-1"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      const newFiles = Array.from(e.target.files)
+                      setMediaFiles((prev) => [...prev, ...newFiles])
+                    }
+                  }}
+                />
+                {mediaFiles.length > 0 && (
+                  <div className="mt-2 text-xs text-gray-600">
+                    <p className="mb-1">New Files to Upload:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      {mediaFiles.map((file, idx) => (
+                        <li key={idx} className="flex justify-between">
+                          {file.name}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMediaFiles((prev) => prev.filter((_, i) => i !== idx))
+                            }}
+                            className="text-red-500 text-xs hover:underline ml-2"
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </Section>
 
             <Section title="Media Attachments 📎">
@@ -308,58 +463,30 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
           {/* Right Column */}
           <div className="col-span-1 space-y-4">
             <Section title="AI Co-Pilot" icon={<Bot className="text-red-600" />}>
-              <Button className="w-full bg-red-600 hover:bg-red-700">Analyze with AI</Button>
-              <div className="flex justify-around text-center p-2 bg-white rounded-lg">
-                <div>
-                  <input
-                    type="number"
-                    min="0"
-                    max="6"
-                    value={editedIssue.aiSuggestions?.impactScore || 0}
-                    onChange={(e) => {
-                      const value = Math.min(6, Math.max(0, parseInt(e.target.value) || 0));
-                      handleChange("aiSuggestions", {
-                        ...editedIssue.aiSuggestions,
-                        impactScore: value,
-                        totalScore: value + (editedIssue.aiSuggestions?.complexityScore || 0)
-                      });
-                    }}
-                    className="text-3xl font-bold text-blue-600 w-20 text-center bg-transparent border-none outline-none"
-                  />
-                  <div className="text-xs text-gray-500">Impact Score</div>
-                </div>
-                <div>
-                  <input
-                    type="number"
-                    min="0"
-                    max="12"
-                    value={editedIssue.aiSuggestions?.complexityScore || 0}
-                    onChange={(e) => {
-                      const value = Math.min(12, Math.max(0, parseInt(e.target.value) || 0));
-                      handleChange("aiSuggestions", {
-                        ...editedIssue.aiSuggestions,
-                        complexityScore: value,
-                        totalScore: value + (editedIssue.aiSuggestions?.impactScore || 0)
-                      });
-                    }}
-                    className="text-3xl font-bold text-purple-600 w-20 text-center bg-transparent border-none outline-none"
-                  />
-                  <div className="text-xs text-gray-500">Complexity Score</div>
-                </div>
-              </div>
-              <div className="text-center p-2 bg-white rounded-lg">
-                <div className="text-3xl font-bold text-gray-800">{editedIssue.aiSuggestions?.totalScore || 0}</div>
-                <div className="text-xs text-gray-500">Total Score</div>
-              </div>
-              <div className="text-center p-3 bg-orange-100 text-orange-700 rounded-lg font-semibold">
-                {editedIssue.aiSuggestions?.suggestedPriority || "N/A"}
-                <div className="text-xs font-normal">Suggested Priority</div>
-              </div>
-              <Button variant="outline" className="w-full">Detect Duplicates</Button>
-              <div className="flex items-center text-sm text-yellow-600 p-2 bg-yellow-50 rounded-md">
-                <AlertCircle className="w-4 h-4 mr-2" />
-                AI analysis might take a few moments.
-              </div>
+
+              <PriorityScoreCard editedIssue={editedIssue} setEditedIssue={setEditedIssue} />
+
+              <DetectDuplicateButton
+                issueId={editedIssue.id}
+                issueDescription={editedIssue.description}
+                onResult={handleResult}
+                onError={handleError}
+              />
+              {/* Error Display */}
+              {error && (
+                <Alert className="mb-6 border-red-200 bg-red-50">
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <AlertDescription className="text-red-800">
+                    {error}
+                  </AlertDescription>
+                </Alert>
+              )}
+              <ResultsModal
+                isOpen={showModal}
+                onClose={closeModal}
+                result={result}
+              />
+
             </Section>
 
             <Section title="Assignment & Timeline" icon={<Clock className="text-red-600" />}>
@@ -379,14 +506,6 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 />
               </Field>
 
-              <Field label="IT PIC">
-                <Input
-                  value={editedIssue.itPicUid || ""}
-                  onChange={(e) => handleChange("itPicUid", e.target.value)}
-                  placeholder="Assign IT PIC"
-                />
-              </Field>
-
               <div className="space-y-2 pt-2 border-t mt-4">
                 {/* Created - set once when created */}
                 <div className="flex items-center text-sm text-gray-600 gap-x-2">
@@ -395,7 +514,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   <span>{new Date(editedIssue.createdAt).toLocaleDateString("en-GB")}</span>
                 </div>
 
-                {/* Picked Up - set when status changes from 'new' to 'in_progress' */}
+                {/* Picked Up - set when status changes from 'new' to 'investigating' */}
                 <div className="flex items-center text-sm text-gray-600 gap-x-2">
                   <GitMerge className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">Picked Up:</span>
@@ -406,7 +525,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   </span>
                 </div>
 
-                {/* Assigned - set when status changes from 'in_progress' to 'cleansing' */}
+                {/* Assigned - set when status changes from 'investigating' to 'resolving' */}
                 <div className="flex items-center text-sm text-gray-600 gap-x-2">
                   <GitPullRequestArrowIcon className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">Assigned:</span>
@@ -465,7 +584,17 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 <div className="grid grid-cols-2 gap-4">
                     <Field label="Reported"><Input type="number" value={editedIssue.reportedRecordTotal || ""} onChange={(e) => handleChange("reportedRecordTotal", parseInt(e.target.value))} /></Field>
                     <Field label="Impacted"><Input type="number" value={editedIssue.impactedRecordTotal || ""} onChange={(e) => handleChange("impactedRecordTotal", parseInt(e.target.value))} /></Field>
-                    <Field label="Cleansed"><Input type="number" value={editedIssue.cleansedRecordTotal || ""} onChange={(e) => handleChange("cleansedRecordTotal", parseInt(e.target.value))} /></Field>
+                    <Field label="Cleansed">
+                      <Input
+                        type="number"
+                        value={editedIssue.cleansedRecordTotal || ""}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value)
+                          const max = editedIssue.impactedRecordTotal || 0
+                          handleChange("cleansedRecordTotal", Math.min(val, max))
+                        }}
+                      />
+                    </Field>
                     <Field label="Excluded"><Input type="number" value={editedIssue.excludedRecordTotal || ""} onChange={(e) => handleChange("excludedRecordTotal", parseInt(e.target.value))} /></Field>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-4">
@@ -475,9 +604,46 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 <div className="mt-4">
                   <Progress value={percentCleansedValue} className="h-3 [&>*]:bg-green-500" />
                 </div>
-            </Section>          </div>
-        </div>
+            </Section>
 
+          {(editedIssue.systemEnhancement === "yes" || editedIssue.processImprovement === "yes") && (
+            <Section title="Enhancement & Improvement Scores">
+              {editedIssue.systemEnhancement === "yes" && (
+                <Field label="System Enhancement Score">
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      value={[editedIssue.systemEnhancementScore ?? 0]}
+                      onValueChange={([val]) => handleChange("systemEnhancementScore", val)}
+                      max={100}
+                      step={1}
+                    />
+                    <span className="w-10 text-right text-sm text-gray-700">
+                      {editedIssue.systemEnhancementScore ?? 0}
+                    </span>
+                  </div>
+                </Field>
+              )}
+                {editedIssue.processImprovement === "yes" && (
+                  <Field label="Process Improvement Score">
+                    <div className="flex items-center gap-4">
+                      <Slider
+                        value={[editedIssue.processImprovementScore ?? 0]}
+                        onValueChange={([val]) => handleChange("processImprovementScore", val)}
+                        max={100}
+                        step={1}
+                      />
+                      <span className="w-10 text-right text-sm text-gray-700">
+                        {editedIssue.processImprovementScore ?? 0}
+                      </span>
+                    </div>
+                  </Field>
+                )}
+            </Section>
+          )}
+
+
+          </div>
+        </div>
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="outline">Cancel</Button>

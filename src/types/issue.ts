@@ -2,8 +2,9 @@ export interface Issue {
   // Core Details
   id: string
   description: string
-  priority: "Super High" | "High" | "Medium" | "Low"
-  mediaAttachments: string[]
+  priority: "Super High" | "High" | "Medium" | "Low" | "N/A"
+  mediaFiles?: File[] // for frontend only (temporary)
+  mediaUrls?: string[] // for uploaded file URLs (after backend or Firebase upload)
 
   // Requester & Source Info
   requesterName: string
@@ -18,11 +19,16 @@ export interface Issue {
   suggestedResolution?: string
 
   // Status & Assignment
-  status: "new" | "monitoring" | "closed" | "rejected" | "cleansing" | "investigating" | "enhancing" | "resolved"
+  // Status Dictinary:
+  // New: new MS form submission
+  // Investigating: ticket pickup
+  // Resolving: in progress of resolving (cleansing, system enhancement, process improvement)
+  // Monitoring: after resolving, monitor 3 months
+  // Closed: after monitoring period
+  status: "new" | "monitoring" | "closed" | "resolving" | "investigating"
   createdByUid: string
   dqPicUid?: string
   dsPicUid?: string
-  itPicUid?: string
 
   // Timestamps
   createdAt: Date
@@ -42,7 +48,7 @@ export interface Issue {
   criticalDataElement?: "Yes" | "No"
   dqIssueCategory?: string
   issueField?: string
-  isRecurring?: boolean
+  isRecurring?: string
 
   // RCA & Impact
   rcaCategory?: string
@@ -57,16 +63,22 @@ export interface Issue {
   outstandingRecordTotal?: number // Should be derived (reported - cleansed - excluded)
   percentTotal?: string            // e.g. "25%"
 
+  systemEnhancement?: "yes" | "no"
+  systemEnhancementScore?: number
+  processImprovement?: "yes" | "no"
+  processImprovementScore?: number
+
   // Notes & Remarks
   extraRemarks?: string
   systemEnhancementNotes?: string
+  processImprovementNotes?: string
 
   // AI Co-Pilot
   aiSuggestions?: {
     impactScore: number
     complexityScore: number
     totalScore: number
-    suggestedPriority: "High" | "Medium" | "Low"
+    suggestedPriority: "Super High" | "High" | "Medium" | "Low"
   }
 
   // Working days calculation (based on totalScore)

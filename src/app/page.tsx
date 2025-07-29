@@ -4,15 +4,15 @@ import { useEffect, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { IssueTable } from "@/components/issue-table"
 import { Button } from "@/components/ui/button"
-import { Plus, Users, Kanban, Search } from "lucide-react"
+import { Home, Plus, Users, Kanban, Search } from "lucide-react"
 import { CreateIssueModal } from "@/components/create-issue-modal"
 import { IssueModal } from "@/components/issue-modal"
 import type { Issue } from "@/types/issue"
-import { AnalysisDashboard } from "@/components/analysis-dashboard"
-import { ResolutionDashboard } from "@/components/resolution-dashboard"
 import { mockIssues } from "@/lib/mock-data"
 import { firestore } from "@/lib/firebase"
 import { collection, getDocs, Timestamp } from "firebase/firestore"
+import { HomeDashboard } from "@/components/home-dashboard"
+import { MergedDashboard } from "@/components/merged-dashboard"
 
 export default function HomePage() {
   const [issues, setIssues] = useState<Issue[]>([])
@@ -22,21 +22,15 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchIssues = async () => {
-      const issuesCollection = collection(firestore, "issues");
-      const issueSnapshot = await getDocs(issuesCollection);
-      const issuesList = issueSnapshot.docs.map(doc => {
-        const data = doc.data();
-        // Convert Firestore Timestamps to JS Date objects
+      const issuesCollection = collection(firestore, "issues")
+      const issueSnapshot = await getDocs(issuesCollection)
+      const issuesList = issueSnapshot.docs.map((doc) => {
+        const data = doc.data()
         const convertTimestamp = (timestamp: any) => {
-          if (timestamp instanceof Timestamp) {
-            return timestamp.toDate();
-          }
-          // Handle date strings
-          if (typeof timestamp === 'string') {
-            return new Date(timestamp);
-          }
-          return new Date(); // Fallback for undefined or null dates
-        };
+          if (timestamp instanceof Timestamp) return timestamp.toDate()
+          if (typeof timestamp === "string") return new Date(timestamp)
+          return new Date()
+        }
 
         return {
           ...data,
@@ -44,13 +38,13 @@ export default function HomePage() {
           createdAt: convertTimestamp(data.createdAt),
           deadline: convertTimestamp(data.deadline),
           assignedAt: data.assignedAt ? convertTimestamp(data.assignedAt) : new Date(),
-        } as Issue;
-      });
-      setIssues(issuesList);
-    };
+        } as Issue
+      })
+      setIssues(issuesList)
+    }
 
-    fetchIssues();
-  }, []);
+    fetchIssues()
+  }, [])
 
   const handleCreateIssue = (newIssue: Omit<Issue, "id" | "createdAt">) => {
     const issue: Issue = {
@@ -74,51 +68,63 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50">
-      <header className="bg-white border-b border-red-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-red-600 to-orange-600 rounded-lg"></div>
-              <h1 className="text-2xl font-bold text-gray-900">AmBank Data Quality Platform</h1>
-            </div>
-            <Button onClick={() => setIsCreateModalOpen(true)} className="bg-red-600 hover:bg-red-700 text-white">
-              <Plus className="w-4 h-4 mr-2" />
-              Create New Issue
-            </Button>
-          </div>
-        </div>
-      </header>
+      <Tabs defaultValue="Home" className="w-full">
+        <header className="bg-white border-b border-red-200 shadow-sm sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center space-x-4">
+                <div className="w-8 h-8 bg-gradient-to-r from-red-600 to-orange-600 rounded-lg"></div>
+                <h1 className="text-2xl font-bold text-gray-900">AmBank</h1>
+              </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="table" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="table" className="flex items-center space-x-2">
-              <Users className="w-4 h-4" />
-              <span>Overview</span>
-            </TabsTrigger>
-            <TabsTrigger value="analysis" className="flex items-center space-x-2">
-              <Search className="w-4 h-4" />
-              <span>Analysis Dashboard</span>
-            </TabsTrigger>
-            <TabsTrigger value="resolution" className="flex items-center space-x-2">
-              <Kanban className="w-4 h-4" />
-              <span>Resolution Dashboard</span>
-            </TabsTrigger>
-          </TabsList>
+              <TabsList className="gap-4">
+                <TabsTrigger value="Home" className="flex items-center space-x-2">
+                  <Home className="w-4 h-4" />
+                  <span>Home</span>
+                </TabsTrigger>
+                <TabsTrigger value="table" className="flex items-center space-x-2">
+                  <Users className="w-4 h-4" />
+                  <span>All Issues</span>
+                </TabsTrigger>
+                <TabsTrigger value="workflow" className="flex items-center space-x-2">
+                  <Kanban className="w-4 h-4" />
+                  <span>Workflow Board</span>
+                </TabsTrigger>
+              </TabsList>
+
+              <Button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create New Issue
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <main className="py-8">
+          <TabsContent value="Home" className="px-4 sm:px-6 lg:px-8">
+            <HomeDashboard issues={issues} />
+          </TabsContent>
 
           <TabsContent value="table">
-            <IssueTable issues={issues} onIssueClick={handleIssueClick} />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <IssueTable issues={issues} onIssueClick={handleIssueClick} />
+            </div>
           </TabsContent>
 
-          <TabsContent value="analysis">
-            <AnalysisDashboard issues={issues} onIssueClick={handleIssueClick} onUpdateIssue={handleUpdateIssue} />
+          <TabsContent value="workflow">
+            <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+              <MergedDashboard
+                issues={issues}
+                onIssueClick={handleIssueClick}
+                onUpdateIssue={handleUpdateIssue}
+              />
+            </div>
           </TabsContent>
-
-          <TabsContent value="resolution">
-            <ResolutionDashboard issues={issues} onIssueClick={handleIssueClick} onUpdateIssue={handleUpdateIssue} />
-          </TabsContent>
-        </Tabs>
-      </main>
+        </main>
+      </Tabs>
 
       <CreateIssueModal
         isOpen={isCreateModalOpen}
