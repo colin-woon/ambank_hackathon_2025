@@ -34,15 +34,15 @@ export interface Issue {
   // Created At: new ticket creation date
   // Picked Up At: ticket picked up and being investigated date
   // Assigned At: Date that ticket is sent to Data Steward to resolve
-  // Completed At: Date that data is completely cleansed and sent to monitor
-  // Resolved At: 3 months after monitoring and no change nor similar issue and considered closed
+  // Resolved At: when the data is done cleansing and sent to monitor
+  // Closed At: when ticket is closed
   // Deadline: deadline
   // Updated At: date that ticket is updated or changes status
   createdAt: Date
   pickedUpAt?: Date
   assignedAt?: Date
-  completedAt?: Date
   resolvedAt?: Date
+  closedAt?: Date
   deadline: Date
   updatedAt?: Date
 
