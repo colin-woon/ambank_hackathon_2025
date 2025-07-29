@@ -111,22 +111,28 @@ export default function HomePage() {
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <TabsContent value="Home">
+            {/* onIssueClick={handleIssueClick}  */}
+        <main className="py-8">
+            <TabsContent value="Home" className="px-4 sm:px-6 lg:px-8">
               <HomeDashboard issues={issues}/>
             </TabsContent>
-            {/* onIssueClick={handleIssueClick}  */}
 
             <TabsContent value="table">
-              <IssueTable issues={issues} onIssueClick={handleIssueClick} />
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <IssueTable issues={issues} onIssueClick={handleIssueClick} />
+              </div>
             </TabsContent>
 
             <TabsContent value="analysis">
-              <AnalysisDashboard issues={issues} onIssueClick={handleIssueClick} onUpdateIssue={handleUpdateIssue} />
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <AnalysisDashboard issues={issues} onIssueClick={handleIssueClick} onUpdateIssue={handleUpdateIssue} />
+              </div>
             </TabsContent>
 
             <TabsContent value="resolution">
-              <ResolutionDashboard issues={issues} onIssueClick={handleIssueClick} onUpdateIssue={handleUpdateIssue} />
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <ResolutionDashboard issues={issues} onIssueClick={handleIssueClick} onUpdateIssue={handleUpdateIssue} />
+              </div>
             </TabsContent>
         </main>
       </Tabs>
