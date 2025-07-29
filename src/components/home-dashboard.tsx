@@ -7,94 +7,89 @@ import { UserCircle } from "lucide-react"
 import type { Issue } from "@/types/issue"
 import { ChartPieInteractive } from "@/components/ui/chart-pie-interactive"
 import { ChartConfig } from "@/components/ui/chart"
+import { useState, useMemo } from "react"
 
 interface HomeDashboardProps {
   issues: Issue[]
   onIssueClick: (issue: Issue) => void
 }
 
-// Mock Data
-const pieChartData = [
-  { category: "Data Entry Error", total: 400, fill: "var(--chart-1)" },
-  { category: "System Error", total: 300, fill: "var(--chart-2)" },
-  { category: "Validation Rule", total: 278, fill: "var(--chart-3)" },
-  { category: "Duplicate Record", total: 189, fill: "var(--chart-4)" },
-  { category: "Others", total: 50, fill: "var(--chart-5)" },
-]
+type Top5Category = "issueField" | "sourceSystem" | "dqPicUid" | "dqIssueCategory"
 
-const chartConfig = {
-  total: {
-    label: "Total",
-  },
-  "Data Entry Error": {
-    label: "Data Entry Error",
-    color: "hsl(var(--chart-1))",
-  },
-  "System Error": {
-    label: "System Error",
-    color: "hsl(var(--chart-2))",
-  },
-  "Validation Rule": {
-    label: "Validation Rule",
-    color: "hsl(var(--chart-3))",
-  },
-  "Duplicate Record": {
-    label: "Duplicate Record",
-    color: "hsl(var(--chart-4))",
-  },
-  "Others": {
-    label: "Others",
-    color: "hsl(var(--chart-5))",
-  },
-} satisfies ChartConfig
+const categoryLabels: Record<Top5Category, string> = {
+  issueField: "Data Fields with Issues",
+  sourceSystem: "Source Systems",
+  dqPicUid: "Data Owners (DQ)",
+  dqIssueCategory: "Issue Types",
+}
 
-const top5MockData = [
-  { rank: 1, name: "Customer Address", count: 120 },
-  { rank: 2, name: "Account Balance", count: 98 },
-  { rank: 3, name: "Transaction Date", count: 75 },
-  { rank: 4, name: "Contact Number", count: 62 },
-  { rank: 5, name: "CIF Number", count: 55 },
-]
+const Top5Table = ({ issues, onIssueClick }: { issues: Issue[], onIssueClick: (issue: Issue) => void }) => {
+  const [category, setCategory] = useState<Top5Category>("issueField")
 
-const Top5Table = ({ title }: { title: string }) => (
-  <Card>
-    <CardHeader className="p-4">
-      <CardTitle className="text-base">{title}</CardTitle>
-    </CardHeader>
-    <CardContent className="p-0">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[50px]">Rank</TableHead>
-            <TableHead>Item</TableHead>
-            <TableHead className="text-right">Count</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {top5MockData.map((item) => (
-            <TableRow key={item.rank}>
-              <TableCell>{item.rank}</TableCell>
-              <TableCell>{item.name}</TableCell>
-              <TableCell className="text-right">{item.count}</TableCell>
+  const top5Issues = useMemo(() => {
+    if (!issues || issues.length === 0) return []
+
+    // 1. Find the most frequent value for the selected category
+    const counts = issues.reduce((acc, issue) => {
+      const key = issue[category]
+      if (key) {
+        acc[key] = (acc[key] || 0) + 1
+      }
+      return acc
+    }, {} as Record<string, number>)
+
+    const topCategoryValue = Object.entries(counts).sort(([, a], [, b]) => b - a)[0]?.[0]
+
+    if (!topCategoryValue) return []
+
+    // 2. Filter issues that match the top category value
+    return issues
+      .filter(issue => issue[category] === topCategoryValue)
+      .sort((a, b) => a.deadline.getTime() - b.deadline.getTime()) // Sort by deadline
+      .slice(0, 5) // Get top 5
+  }, [issues, category])
+
+  return (
+    <Card>
+      <CardHeader className="p-4">
+        <CardTitle className="text-base">Top 5 Tickets by {categoryLabels[category]}</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[50px]">Rank</TableHead>
+              <TableHead>Ticket ID</TableHead>
+              <TableHead className="text-right">Deadline</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </CardContent>
-    <CardFooter className="p-2">
-       <Select defaultValue="category">
+          </TableHeader>
+          <TableBody>
+            {top5Issues.map((item, index) => (
+              <TableRow key={item.id} onClick={() => onIssueClick(item)} className="cursor-pointer">
+                <TableCell>{index + 1}</TableCell>
+                <TableCell>{item.id}</TableCell>
+                <TableCell className="text-right">{item.deadline.toLocaleDateString()}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+      <CardFooter className="p-2">
+        <Select value={category} onValueChange={(value) => setCategory(value as Top5Category)}>
           <SelectTrigger>
             <SelectValue placeholder="Select Category" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="category">By Category</SelectItem>
-            <SelectItem value="source">By Source System</SelectItem>
-            <SelectItem value="owner">By Data Owner</SelectItem>
+            <SelectItem value="issueField">By Data Field</SelectItem>
+            <SelectItem value="sourceSystem">By Source System</SelectItem>
+            <SelectItem value="dqPicUid">By Data Owner</SelectItem>
+            <SelectItem value="dqIssueCategory">By Issue Type</SelectItem>
           </SelectContent>
         </Select>
-    </CardFooter>
-  </Card>
-)
+      </CardFooter>
+    </Card>
+  )
+}
 
 export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
   const statusCounts = issues.reduce((acc, issue) => {
@@ -148,18 +143,18 @@ export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
           id="issue-status"
           data={statusChartData}
           chartConfig={statusChartConfig}
-          title="Issue Status Distribution"
-          description="Breakdown of issues by current status"
+          title="Ticket Status Distribution"
+          description="Breakdown of tickets by current status"
           dataKey="total"
           nameKey="status"
-          unitLabel="Issues"
+          unitLabel="Tickets"
         />
       </div>
       {/* Right Column */}
       <div className="lg:col-span-2 space-y-8">
         <Card>
             <CardHeader>
-                <CardTitle>Urgent Follow-ups</CardTitle>
+                <CardTitle>Near Deadline Follow-ups</CardTitle>
             </CardHeader>
             <CardContent className="flex justify-around items-center pt-4">
                 {urgentFollowUps.map((item) => (
@@ -177,10 +172,10 @@ export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
             </CardContent>
         </Card>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <Top5Table title="Top 5 Data Fields with Issues" />
-            <Top5Table title="Top 5 Source Systems" />
-            <Top5Table title="Top 5 Data Owners" />
-            <Top5Table title="Top 5 Issue Types" />
+          <Top5Table issues={issues} onIssueClick={onIssueClick} />
+          <Top5Table issues={issues} onIssueClick={onIssueClick} />
+          <Top5Table issues={issues} onIssueClick={onIssueClick} />
+          <Top5Table issues={issues} onIssueClick={onIssueClick} />
         </div>
       </div>
     </div>
