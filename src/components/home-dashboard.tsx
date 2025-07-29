@@ -30,23 +30,23 @@ export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
     },
     new: {
       label: "New",
-      color: "hsl(var(--chart-1))",
+      color: "#3b82f6",
     },
     investigating: {
       label: "Investigating",
-      color: "hsl(var(--chart-2))",
+      color: "#3a7d1e",
     },
     resolving: {
       label: "Resolving",
-      color: "hsl(var(--chart-3))",
+      color: "#ed8f02",
     },
     monitoring: {
       label: "Monitoring",
-      color: "hsl(var(--chart-4))",
+      color: "#8728b0",
     },
     closed: {
       label: "Closed",
-      color: "hsl(var(--chart-5))",
+      color: "#b8b8b8",
     },
   } satisfies ChartConfig
 

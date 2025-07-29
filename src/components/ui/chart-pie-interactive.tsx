@@ -80,51 +80,36 @@ export function ChartPieInteractive({
           <CardTitle>{title}</CardTitle>
           <CardDescription className="lg:text-2xl">{description}</CardDescription>
         </div>
-        <div className="grid grid-cols-2 gap-10 place-items-center pt-5">
-          <div className="flex flex-col items-center">
-            <CountUp
-              from={0}
-              to={100}
-              separator=","
-              direction="up"
-              duration={3}
-              className="count-up-text lg:text-8xl font-bold"
-              />
-              <p className="font-bold lg:text-4xl">test 1</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <CountUp
-              from={0}
-              to={100}
-              separator=","
-              direction="up"
-              duration={3}
-              className="count-up-text lg:text-8xl font-bold"
-              />
-              <p className="font-bold lg:text-4xl">test 1</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <CountUp
-              from={0}
-              to={100}
-              separator=","
-              direction="up"
-              duration={3}
-              className="count-up-text lg:text-8xl font-bold"
-              />
-              <p className="font-bold lg:text-4xl">test 1</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <CountUp
-              from={0}
-              to={100}
-              separator=","
-              direction="up"
-              duration={3}
-              className="count-up-text lg:text-8xl font-bold"
-              />
-              <p className="font-bold lg:text-4xl">test 1</p>
-          </div>
+         <div className="grid grid-cols-2 gap-10 place-items-center pt-5">
+          {data
+            .filter((item) => item[nameKey] !== "closed")
+            .map((item) => {
+              const status = item[nameKey];
+              const value = item[dataKey];
+              const config = chartConfig[status] || {};
+              const label = config.label || status.replace(/_/g, " ");
+              const color = config.color;
+
+              return (
+                <div key={status} className="flex flex-col items-center">
+                  <CountUp
+                    from={0}
+                    to={value}
+                    separator=","
+                    direction="up"
+                    duration={2}
+                    className="count-up-text lg:text-8xl font-bold"
+                    style={{ color }}
+                  />
+                  <p
+                    className={`font-bold lg:text-4xl capitalize`}
+                    style={{ color }}
+                  >
+                    {label}
+                  </p>
+                </div>
+              );
+            })}
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 items-center justify-center pb-0">
