@@ -72,7 +72,7 @@ export const Top5Table = ({ issues, onIssueClick, sortKey: initialSortKey }: Top
             {top5Issues.map((item) => (
               <TableRow key={item.id} onClick={() => onIssueClick(item)} className="cursor-pointer hover:bg-red-50">
                 <TableCell className="font-medium text-red-600">{item.id}</TableCell>
-                <TableCell className="text-right">{item.deadline.toLocaleDateString()}</TableCell>
+                <TableCell className="text-right">{item.deadline.toLocaleDateString("en-GB")}</TableCell>
               </TableRow>
             ))}
           </TableBody>

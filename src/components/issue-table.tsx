@@ -231,17 +231,17 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
                 <TableCell>
                   {issue.pickedUpAt ? 
                     (issue.pickedUpAt instanceof Date ? 
-                      issue.pickedUpAt.toLocaleDateString() : 
+                      issue.pickedUpAt.toLocaleDateString("en-GB") : 
                       // Handle Firestore timestamp
-                      new Date(issue.pickedUpAt.seconds * 1000).toLocaleDateString()
+                      new Date(issue.pickedUpAt.seconds * 1000).toLocaleDateString("en-GB")
                     ) : "N/A"}
                 </TableCell>                
                 <TableCell>
                   {issue.deadline ? 
                     (issue.deadline instanceof Date ? 
-                      issue.deadline.toLocaleDateString() : 
+                      issue.deadline.toLocaleDateString("en-GB") : 
                       // Handle Firestore timestamp
-                      new Date(issue.deadline.seconds * 1000).toLocaleDateString()
+                      new Date(issue.deadline.seconds * 1000).toLocaleDateString("en-GB")
                     ) : "N/A"}
                 </TableCell>                
 <TableCell>{issue.agingDays || "N/A"}</TableCell>

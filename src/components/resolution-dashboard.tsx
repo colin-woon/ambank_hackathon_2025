@@ -119,7 +119,7 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
           <p className="text-sm text-gray-700 mb-2 line-clamp-1">{issue.description}</p>
           <div className="flex justify-between text-xs text-gray-500 mb-2">
             <span>{issue.dsPicUid}</span>
-            <span>{issue.assignedAt?.toLocaleDateString?.() ?? "N/A"}</span>
+            <span>{issue.assignedAt?.toLocaleDateString("en-GB") ?? "N/A"}</span>
           </div>
 
           {issue.impactedRecordTotal && (
