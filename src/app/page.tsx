@@ -88,10 +88,15 @@ export default function HomePage() {
       <Tabs defaultValue="Home" className="w-full">
         <header className="bg-white border-b border-red-200 shadow-sm sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4">
+            <div className="flex justify-between items-center">
               <div className="flex items-center space-x-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-red-600 to-orange-600 rounded-lg"></div>
-                <h1 className="text-2xl font-bold text-gray-900">AmBank</h1>
+                <img 
+                  src="/amdash.png" 
+                  alt="AmDash Logo" 
+                  width={200} 
+                  height={200}
+                  className="rounded-lg -mb-3 -mt-3"
+                />
               </div>
 
               <TabsList className="gap-4">
