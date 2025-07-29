@@ -234,7 +234,6 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                       </SelectContent>
                     </Select>
                   </Field>
-                  {editedIssue.status === "resolving" && (
                     <div className="flex items-center gap-6 mt-2">
                       <div className="flex items-center gap-2">
                         <input
@@ -261,7 +260,6 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                         <Label htmlFor="processImprovement">Process Improvement</Label>
                       </div>
                     </div>
-                  )}
                 </div>
 
                 <div className="flex justify-end items-end gap-3">
@@ -333,7 +331,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 <Textarea value={editedIssue.extraRemarks || ""} onChange={(e) => handleChange("extraRemarks", e.target.value)} rows={4} />
             </Section>
 
-            {editedIssue.status === "resolving" && editedIssue.systemEnhancement === "yes" && (
+            {editedIssue.systemEnhancement === "yes" && (
               <Section title="System Enhancement Notes">
                 <Textarea
                   value={editedIssue.systemEnhancementNotes || ""}
@@ -343,7 +341,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
               </Section>
             )}
 
-            {editedIssue.status === "resolving" && editedIssue.processImprovement === "yes" && (
+            {editedIssue.processImprovement === "yes" && (
               <Section title="Process Improvement Notes">
                 <Textarea
                   value={editedIssue.processImprovementNotes || ""}
@@ -563,34 +561,40 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 </div>
             </Section>
 
+          {(editedIssue.systemEnhancement === "yes" || editedIssue.processImprovement === "yes") && (
             <Section title="Enhancement & Improvement Scores">
-              <Field label="System Enhancement Score">
-                <div className="flex items-center gap-4">
-                  <Slider
-                    value={[editedIssue.systemEnhancementScore ?? 0]}
-                    onValueChange={([val]) => handleChange("systemEnhancementScore", val)}
-                    max={100}
-                    step={1}
-                  />
-                  <span className="w-10 text-right text-sm text-gray-700">
-                    {editedIssue.systemEnhancementScore ?? 0}
-                  </span>
-                </div>
-              </Field>
-              <Field label="Process Improvement Score">
-                <div className="flex items-center gap-4">
-                  <Slider
-                    value={[editedIssue.processImprovementScore ?? 0]}
-                    onValueChange={([val]) => handleChange("processImprovementScore", val)}
-                    max={100}
-                    step={1}
-                  />
-                  <span className="w-10 text-right text-sm text-gray-700">
-                    {editedIssue.processImprovementScore ?? 0}
-                  </span>
-                </div>
-              </Field>
+              {editedIssue.systemEnhancement === "yes" && (
+                <Field label="System Enhancement Score">
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      value={[editedIssue.systemEnhancementScore ?? 0]}
+                      onValueChange={([val]) => handleChange("systemEnhancementScore", val)}
+                      max={100}
+                      step={1}
+                    />
+                    <span className="w-10 text-right text-sm text-gray-700">
+                      {editedIssue.systemEnhancementScore ?? 0}
+                    </span>
+                  </div>
+                </Field>
+              )}
+                {editedIssue.processImprovement === "yes" && (
+                  <Field label="Process Improvement Score">
+                    <div className="flex items-center gap-4">
+                      <Slider
+                        value={[editedIssue.processImprovementScore ?? 0]}
+                        onValueChange={([val]) => handleChange("processImprovementScore", val)}
+                        max={100}
+                        step={1}
+                      />
+                      <span className="w-10 text-right text-sm text-gray-700">
+                        {editedIssue.processImprovementScore ?? 0}
+                      </span>
+                    </div>
+                  </Field>
+                )}
             </Section>
+          )}
 
 
           </div>

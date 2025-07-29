@@ -119,7 +119,7 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
           <span>{issue.createdAt?.toLocaleDateString?.() ?? issue.assignedAt?.toLocaleDateString?.() ?? "N/A"}</span>
         </div>
 
-        {issue.impactedRecordTotal && (
+        {(issue.status === "resolving" || issue.status === "monitoring") && issue.impactedRecordTotal && (
           <div className="mb-2">
             <div className="text-xs text-gray-600 mb-1">
               Cleansing Progress: {Math.round(((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}%
@@ -131,38 +131,32 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
           </div>
         )}
 
-        {issue.systemEnhancement === "yes" && typeof issue.systemEnhancementScore === "number" && (
+        {issue.systemEnhancement === "yes" && typeof issue.systemEnhancementScore === "number" && (issue.status === "resolving" || issue.status == "monitoring") &&
+        (
           <div className="mb-2">
             <div className="text-xs text-gray-600 mb-1">System Enhancement Score: {issue.systemEnhancementScore}%</div>
             <Progress value={Math.min(100, issue.systemEnhancementScore)} className="h-2 [&>*]:bg-blue-500" />
           </div>
         )}
 
-        {issue.processImprovement === "yes" && typeof issue.processImprovementScore === "number" && (
+        {issue.processImprovement === "yes" && typeof issue.processImprovementScore === "number" && (issue.status === "resolving" || issue.status == "monitoring") && (
           <div className="mb-2">
             <div className="text-xs text-gray-600 mb-1">Process Improvement Score: {issue.processImprovementScore}%</div>
             <Progress value={Math.min(100, issue.processImprovementScore)} className="h-2 [&>*]:bg-yellow-500" />
           </div>
         )}
-
-        <div className="flex gap-2 mt-2">
-          <Button size="sm" variant="outline" className="flex-1 text-green-700 border-green-300 hover:bg-green-50 bg-transparent"
-            onClick={(e) => {
-              e.stopPropagation()
-              onUpdateIssue({ ...issue, status: "closed", completedAt: new Date() })
-            }}
-          >
-            <CheckCircle className="w-3 h-3 mr-1" /> Close
-          </Button>
-          <Button size="sm" variant="outline" className="flex-1 text-blue-700 border-blue-300 hover:bg-blue-50 bg-transparent"
-            onClick={(e) => {
-              e.stopPropagation()
-              onUpdateIssue({ ...issue, status: "resolved", resolvedAt: new Date() })
-            }}
-          >
-            <CheckCircle className="w-3 h-3 mr-1" /> Resolve
-          </Button>
-        </div>
+        {issue.status == "monitoring" && (
+          <div className="flex gap-2 mt-2">
+            <Button size="sm" variant="outline" className="flex-1 text-green-700 border-green-300 hover:bg-green-50 bg-transparent"
+              onClick={(e) => {
+                e.stopPropagation()
+                onUpdateIssue({ ...issue, status: "closed", completedAt: new Date() })
+              }}
+            >
+              <CheckCircle className="w-3 h-3 mr-1" /> Close
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
