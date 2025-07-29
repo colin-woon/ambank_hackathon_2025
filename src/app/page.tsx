@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { IssueTable } from "@/components/issue-table"
 import { Button } from "@/components/ui/button"
-import { Home, Plus, Users, Kanban, BarChart2 } from "lucide-react"
+import { Home, Plus, Users, Kanban } from "lucide-react"
 import { CreateIssueModal } from "@/components/create-issue-modal"
 import { IssueModal } from "@/components/issue-modal"
 import type { Issue } from "@/types/issue"
@@ -13,7 +13,6 @@ import { db } from "@/lib/firebase"
 import { collection, getDocs, Timestamp } from "firebase/firestore"
 import { HomeDashboard } from "@/components/home-dashboard"
 import { MergedDashboard } from "@/components/merged-dashboard"
-import { AnalyticsDashboard } from "@/components/analytics-dashboard"
 
 export default function HomePage() {
   const [issues, setIssues] = useState<Issue[]>([])
@@ -106,10 +105,6 @@ export default function HomePage() {
                   <Kanban className="w-4 h-4" />
                   <span>Workflow Board</span>
                 </TabsTrigger>
-                <TabsTrigger value="analytics" className="flex items-center space-x-2">
-                  <BarChart2 className="w-4 h-4" />
-                  <span>Analytics</span>
-                </TabsTrigger>
               </TabsList>
 
               <Button
@@ -148,12 +143,6 @@ export default function HomePage() {
                 onIssueClick={handleIssueClick}
                 onUpdateIssue={handleUpdateIssue}
               />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="analytics">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <AnalyticsDashboard issues={issues} />
             </div>
           </TabsContent>
             </>
