@@ -18,7 +18,7 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
     (issue) => issue.status === "resolving"
   )
 
-  const monitoringIssues = issues.filter((issue) => issue.status === "monitoring")
+  const monitoringIssues = issues.filter((issue) => issue.status === "monitoring" || issue.status == "resolved" || issue.status == "closed")
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {

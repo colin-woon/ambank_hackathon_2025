@@ -109,10 +109,30 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
   }, [isOpen, issue])
 
   const handleChange = (field: keyof Issue, value: any) => {
-    if (editedIssue) {
-      setEditedIssue({ ...editedIssue, [field]: value })
+    if (!editedIssue) return
+    let updates: Partial<Issue> = { [field]: value }
+    if (field === "status") {
+      const now = new Date()
+
+      switch (value) {
+        case "investigating":
+          updates.pickedUpAt = editedIssue.pickedUpAt ?? now
+          break
+        case "resolving":
+          updates.assignedAt = editedIssue.assignedAt ?? now
+          break
+        case "resolved":
+          updates.resolvedAt = editedIssue.resolvedAt ?? now
+          break
+        case "monitoring":
+          updates.completedAt = editedIssue.completedAt ?? now
+          break
+      }
     }
+
+    setEditedIssue({ ...editedIssue, ...updates })
   }
+
 
   const uploadFiles = async (files: File[]): Promise<string[]> => {
     // Simulated upload – replace with real upload logic (Firebase, S3, etc.)
@@ -221,7 +241,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     <SelectContent>
                       <SelectItem value="new">New</SelectItem>
                       <SelectItem value="investigating">Investigating</SelectItem>
-                      <SelectItem value="resolving">Cleansing</SelectItem>
+                      <SelectItem value="resolving">Resolving</SelectItem>
                       <SelectItem value="monitoring">Monitoring</SelectItem>
                       <SelectItem value="closed">Closed</SelectItem>
                       <SelectItem value="resolved">Resolved</SelectItem>
@@ -496,7 +516,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   <span>{new Date(editedIssue.createdAt).toLocaleDateString("en-GB")}</span>
                 </div>
 
-                {/* Picked Up - set when status changes from 'new' to 'in_progress' */}
+                {/* Picked Up - set when status changes from 'new' to 'investigating' */}
                 <div className="flex items-center text-sm text-gray-600 gap-x-2">
                   <GitMerge className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">Picked Up:</span>
@@ -507,7 +527,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   </span>
                 </div>
 
-                {/* Assigned - set when status changes from 'in_progress' to 'cleansing' */}
+                {/* Assigned - set when status changes from 'investigating' to 'resolving' */}
                 <div className="flex items-center text-sm text-gray-600 gap-x-2">
                   <GitPullRequestArrowIcon className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">Assigned:</span>
