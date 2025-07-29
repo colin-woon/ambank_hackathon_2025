@@ -460,14 +460,6 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 />
               </Field>
 
-              <Field label="IT PIC">
-                <Input
-                  value={editedIssue.itPicUid || ""}
-                  onChange={(e) => handleChange("itPicUid", e.target.value)}
-                  placeholder="Assign IT PIC"
-                />
-              </Field>
-
               <div className="space-y-2 pt-2 border-t mt-4">
                 {/* Created - set once when created */}
                 <div className="flex items-center text-sm text-gray-600 gap-x-2">
