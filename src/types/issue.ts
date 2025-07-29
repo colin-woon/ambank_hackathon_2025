@@ -66,7 +66,6 @@ export interface Issue {
   systemEnhancement?: "yes" | "no"
   systemEnhancementScore?: number
   processImprovement?: "yes" | "no"
-  systemEnhancementScore?: number
   processImprovementScore?: number
 
   // Notes & Remarks
