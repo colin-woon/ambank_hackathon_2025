@@ -134,29 +134,11 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
   }
 
 
-  const uploadFiles = async (files: File[]): Promise<string[]> => {
-    // Simulated upload – replace with real upload logic (Firebase, S3, etc.)
-    return Promise.all(
-      files.map((file) =>
-        new Promise((resolve) =>
-          setTimeout(() => resolve(URL.createObjectURL(file)), 500)
-        )
-      )
-    )
-  }
-
   const handleSaveChanges = async () => {
     if (!editedIssue) return
 
-    let uploadedUrls: string[] = []
-
-    if (mediaFiles.length > 0) {
-      uploadedUrls = await uploadFiles(mediaFiles) // 👈 implement this function
-    }
-
     const updatedIssue = {
       ...editedIssue,
-      mediaUrls: [...(editedIssue.mediaUrls || []), ...uploadedUrls],
     }
 
     onUpdate(updatedIssue)
