@@ -1,5 +1,7 @@
 "use client"
 
+import { doc, updateDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 import type { Issue } from "@/types/issue"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
@@ -78,6 +80,14 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
     monitoring: filteredIssues.filter((i) => i.status === "monitoring"),
   }
 
+  Object.keys(grouped).forEach((key) => {
+    grouped[key as keyof typeof grouped].sort((a, b) => {
+      const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : 0
+      const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0
+      return aTime - bTime // oldest on top, newest on bottom
+    })
+  })
+
   const statusDetails: Record<string, { label: string; icon: React.ReactNode }> = {
     new: { label: "New", icon: <Clock className="w-5 h-5 mr-2 text-blue-600" /> },
     investigating: { label: "Investigating", icon: <FileSearch className="w-5 h-5 mr-2 text-green-600" /> },
@@ -94,7 +104,7 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
     }
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     setActiveIssue(null)
     if (!over || active.id === over.id) return
@@ -103,11 +113,34 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
     if (!draggedIssue) return
 
     const newStatus = over.id as Issue["status"]
-    if (draggedIssue.status !== newStatus) {
-      const updated = { ...draggedIssue, status: newStatus }
-      if (newStatus === "monitoring") updated.completedAt = new Date()
-      if (newStatus === "resolved") updated.resolvedAt = new Date()
-      onUpdateIssue(updated)
+    if (draggedIssue.status === newStatus) return
+
+    const updated: Issue = {
+      ...draggedIssue,
+      status: newStatus,
+      updatedAt: new Date(),
+      ...(newStatus === "investigating" ? { pickedUpAt: new Date() } : {}),
+      ...(newStatus === "resolving" ? { assignedAt: new Date() } : {}),
+      ...(newStatus === "monitoring" ? { resolvedAt: new Date() } : {}),
+      ...(newStatus === "closed" ? { closedAt: new Date() } : {}),
+    }
+
+    // Local state update
+    onUpdateIssue(updated)
+
+    // Firestore update
+    try {
+      const ref = doc(db, "issues", draggedIssue.id)
+      await updateDoc(ref, {
+        status: newStatus,
+        updatedAt: updated.updatedAt,
+        ...(updated.pickedUpAt && { pickedUpAt: updated.pickedUpAt }),
+        ...(updated.assignedAt && { assignedAt: updated.assignedAt }),
+        ...(updated.resolvedAt && { resolvedAt: updated.resolvedAt }),
+        ...(updated.closedAt && { closedAt: updated.closedAt }),
+      })
+    } catch (err) {
+      console.error("Failed to update status:", err)
     }
   }
 
@@ -125,8 +158,8 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
       <CardContent className="pt-0">
         <p className="text-sm text-gray-700 mb-2 line-clamp-2">{issue.description}</p>
         <div className="flex justify-between text-xs text-gray-500 mb-2">
-          <span>{issue.dsPicUid ?? issue.requesterName}</span>
-          <span>{issue.createdAt?.toLocaleDateString?.() ?? issue.assignedAt?.toLocaleDateString?.() ?? "N/A"}</span>
+          <span>{issue.dsPicUid ?? issue.dqPicUid}</span>
+          <span>{issue.updatedAt?.toLocaleDateString("en-GB") ?? "N/A"}</span>
         </div>
 
         {(issue.status === "resolving" || issue.status === "monitoring") && issue.impactedRecordTotal && (
@@ -141,8 +174,7 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
           </div>
         )}
 
-        {issue.systemEnhancement === "yes" && typeof issue.systemEnhancementScore === "number" && (issue.status === "resolving" || issue.status == "monitoring") &&
-        (
+        {issue.systemEnhancement === "yes" && typeof issue.systemEnhancementScore === "number" && (issue.status === "resolving" || issue.status == "monitoring") && (
           <div className="mb-2">
             <div className="text-xs text-gray-600 mb-1">System Enhancement Score: {issue.systemEnhancementScore}%</div>
             <Progress value={Math.min(100, issue.systemEnhancementScore)} className="h-2 [&>*]:bg-blue-500" />
@@ -160,7 +192,7 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
             <Button size="sm" variant="outline" className="flex-1 text-green-700 border-green-300 hover:bg-green-50 bg-transparent"
               onClick={(e) => {
                 e.stopPropagation()
-                onUpdateIssue({ ...issue, status: "closed", completedAt: new Date() })
+                onUpdateIssue({ ...issue, status: "closed", resolvedAt: new Date() })
               }}
             >
               <CheckCircle className="w-3 h-3 mr-1" /> Close

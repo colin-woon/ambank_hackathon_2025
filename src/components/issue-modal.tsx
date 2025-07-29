@@ -1,5 +1,6 @@
 "use client"
-
+import { doc, updateDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 import { useState, useEffect, useMemo } from "react"
 import type { Issue } from "@/types/issue"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog"
@@ -126,11 +127,11 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
         case "resolving":
           updates.assignedAt = editedIssue.assignedAt ?? now
           break
-        case "resolved":
-          updates.resolvedAt = editedIssue.resolvedAt ?? now
-          break
-        case "monitoring":
-          updates.completedAt = editedIssue.completedAt ?? now
+          case "monitoring":
+            updates.resolvedAt = editedIssue.resolvedAt ?? now
+            break
+        case "closed":
+          updates.closedAt = editedIssue.closedAt ?? now
           break
       }
     }
@@ -140,15 +141,31 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
 
 
   const handleSaveChanges = async () => {
-    if (!editedIssue) return
+    if (!editedIssue) return;
 
-    const updatedIssue = {
-      ...editedIssue,
+    const updatedAt = new Date();
+
+    try {
+      const issueRef = doc(db, "issues", editedIssue.id);
+      await updateDoc(issueRef, {
+        ...editedIssue,
+        updatedAt,
+      });
+
+      const updatedIssue = {
+        ...editedIssue,
+        updatedAt,
+      };
+
+      onUpdate(updatedIssue); // Pass the updated object with updatedAt
+      onClose();
+    } catch (error) {
+      console.error("Error saving issue:", error);
+      alert("Failed to save changes. Please try again.");
     }
-
-    onUpdate(updatedIssue)
-    onClose()
   }
+
+
 
 
   const { outstanding, percentCleansed, percentCleansedValue } = useMemo(() => {
@@ -213,7 +230,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
               <Badge variant="outline" className="border-blue-400 text-blue-600">{editedIssue.status.toUpperCase()}</Badge>
               <div className="text-sm text-gray-500 flex items-center gap-2">
                 <Target className="w-4 h-4" />
-                Deadline: {new Date(editedIssue.deadline).toLocaleDateString()}
+                Deadline: {new Date(editedIssue.deadline).toLocaleDateString("en-GB")}
               </div>
             </div>
           </DialogTitle>
@@ -235,7 +252,6 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                         <SelectItem value="resolving">Resolving</SelectItem>
                         <SelectItem value="monitoring">Monitoring</SelectItem>
                         <SelectItem value="closed">Closed</SelectItem>
-                        {/* <SelectItem value="resolved">Resolved</SelectItem> */}
                       </SelectContent>
                     </Select>
                   </Field>
@@ -539,24 +555,24 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   </span>
                 </div>
 
-                {/* Completed - set when status changes to 'closed' */}
-                <div className="flex items-center text-sm text-gray-600 gap-x-2">
-                  <XCircle className="w-4 h-4 text-gray-500" />
-                  <span className="font-medium">Completed:</span>
-                  <span>
-                    {editedIssue.completedAt
-                      ? new Date(editedIssue.completedAt).toLocaleDateString("en-GB")
-                      : "N/A"}
-                  </span>
-                </div>
-
-                {/* Resolved - set when status changes to 'resolved' */}
+                {/* Resolved - set when status changes to 'monitoring' */}
                 <div className="flex items-center text-sm text-gray-600 gap-x-2">
                   <CheckCircle className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">Resolved:</span>
                   <span>
                     {editedIssue.resolvedAt
                       ? new Date(editedIssue.resolvedAt).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </span>
+                </div>
+
+                {/* Closed - set when status changes to 'closed' */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <XCircle className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Closed:</span>
+                  <span>
+                    {editedIssue.closedAt
+                      ? new Date(editedIssue.closedAt).toLocaleDateString("en-GB")
                       : "N/A"}
                   </span>
                 </div>
@@ -578,6 +594,16 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   <HelpCircle className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">Aging Bucket:</span>
                   <span>{agingBucket ?? "N/A"}</span>
+                </div>
+
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <HelpCircle className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Updated At:</span>
+                  <span>
+                    {editedIssue.updatedAt
+                      ? new Date(editedIssue.updatedAt).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </span>
                 </div>
               </div>
             </Section>

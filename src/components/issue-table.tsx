@@ -23,6 +23,13 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
   key: "createdAt",
   direction: "desc",
 })
+  const formatDate = (date: any) => {
+    if (!date) return "N/A";
+    if (date instanceof Date) return date.toLocaleDateString("en-GB");
+    if (date.seconds) return new Date(date.seconds * 1000).toLocaleDateString("en-GB");
+    return "Invalid";
+  };
+
 
   const filteredIssues = useMemo(
     () =>
@@ -45,6 +52,34 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
       sortableIssues.sort((a, b) => {
         const aValue = a[sortConfig.key]
         const bValue = b[sortConfig.key]
+
+        // Handle dates
+       if (sortConfig.key === "pickedUpAt" || sortConfig.key === "deadline" || sortConfig.key === "createdAt") {
+  // Helper function to get timestamp from various date formats
+  const getTimeValue = (value: any) => {
+    if (!value) return -1; // No value case
+    if (value instanceof Date) return value.getTime();
+    if (value.seconds) return value.seconds * 1000; // Firestore timestamp
+    return -1; // Invalid format case
+  };
+
+  const aTime = getTimeValue(aValue);
+  const bTime = getTimeValue(bValue);
+
+  // If one value exists but the other doesn't, prioritize the existing one
+  if (aTime === -1 && bTime !== -1) return 1; // Push a (N/A) to the end
+  if (aTime !== -1 && bTime === -1) return -1; // Push b (N/A) to the end
+
+  // Normal comparison when both values exist
+  return sortConfig.direction === "asc" ? aTime - bTime : bTime - aTime;
+}
+
+        // Handle numeric values
+        if (sortConfig.key === "agingDays" || sortConfig.key === "agingMonths") {
+          const aNum = Number(aValue) || 0
+          const bNum = Number(bValue) || 0
+          return sortConfig.direction === "asc" ? aNum - bNum : bNum - aNum
+        }
 
         if (aValue < bValue) {
           return sortConfig.direction === "asc" ? -1 : 1
@@ -86,14 +121,14 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
     switch (status) {
       case "new":
         return "bg-blue-100 text-blue-800 border-blue-200"
-      case "in_progress":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case "investigating":
+        return "bg-green-100 text-green-800 border-green-200"
+      case "resolving":
+        return "bg-orange-100 text-orange-800 border-orange-200"
       case "monitoring":
         return "bg-purple-100 text-purple-800 border-purple-200"
       case "closed":
-        return "bg-green-100 text-green-800 border-green-200"
-      case "rejected":
-        return "bg-red-100 text-red-800 border-red-200"
+        return "bg-gray-100 text-gray-800 border-gray-200"
       default:
         return "bg-gray-100 text-gray-800 border-gray-200"
     }
@@ -135,10 +170,10 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="new">New</SelectItem>
-            <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="investigating">Investigating</SelectItem>
             <SelectItem value="monitoring">Monitoring</SelectItem>
+            <SelectItem value="resolving">Resolving</SelectItem>
             <SelectItem value="closed">Closed</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
           </SelectContent>
         </Select>
         <Select value={priorityFilter} onValueChange={setPriorityFilter}>
@@ -169,7 +204,7 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
               <SortableHeader sortKey="impactedArea">Impacted Area</SortableHeader>
               <SortableHeader sortKey="pickedUpAt">Pickup Date</SortableHeader>
               <SortableHeader sortKey="deadline">Deadline</SortableHeader>
-              <SortableHeader sortKey="agingMonths">Aging Months</SortableHeader>
+              <SortableHeader sortKey="agingDays">Aging Days</SortableHeader>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -200,10 +235,28 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
                 >
                   {issue.impactedArea}
                 </TableCell>
-
-                <TableCell>{issue.createdAt.toLocaleDateString()}</TableCell>
-                <TableCell>{issue.deadline.toLocaleDateString()}</TableCell>
-                <TableCell>{issue.agingDays}</TableCell>
+                <TableCell>
+                  {issue.pickedUpAt ?
+                    (issue.pickedUpAt instanceof Date ?
+                      issue.pickedUpAt.toLocaleDateString("en-GB") :
+                      // Handle Firestore timestamp
+                      new Date(issue.pickedUpAt.seconds * 1000).toLocaleDateString("en-GB")
+                    ) : "N/A"}
+                </TableCell>
+                <TableCell>
+                  {issue.deadline ?
+                    (issue.deadline instanceof Date ?
+                      issue.deadline.toLocaleDateString() :
+                  {issue.deadline ?
+                    (issue.deadline instanceof Date ?
+                      issue.deadline.toLocaleDateString("en-GB") :
+                      // Handle Firestore timestamp
+                      new Date(issue.deadline.seconds * 1000).toLocaleDateString("en-GB")
+                    ) : "N/A"}
+                </TableCell>
+                <TableCell>
+                  {issue.agingDays || "N/A"}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

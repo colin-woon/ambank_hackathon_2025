@@ -3,7 +3,6 @@ export interface Issue {
   id: string
   description: string
   priority: "Super High" | "High" | "Medium" | "Low" | "N/A"
-  mediaFiles?: File[] // for frontend only (temporary)
   mediaUrls?: string[] // for uploaded file URLs (after backend or Firebase upload)
 
   // Requester & Source Info
@@ -31,12 +30,21 @@ export interface Issue {
   dsPicUid?: string
 
   // Timestamps
+  // Timestamp Dictionary
+  // Created At: new ticket creation date
+  // Picked Up At: ticket picked up and being investigated date
+  // Assigned At: Date that ticket is sent to Data Steward to resolve
+  // Resolved At: when the data is done cleansing and sent to monitor
+  // Closed At: when ticket is closed
+  // Deadline: deadline
+  // Updated At: date that ticket is updated or changes status
   createdAt: Date
   pickedUpAt?: Date
   assignedAt?: Date
   resolvedAt?: Date
-  completedAt?: Date
+  closedAt?: Date
   deadline: Date
+  updatedAt?: Date
 
   // Aging Info
   agingDays?: number
