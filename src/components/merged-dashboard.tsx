@@ -44,11 +44,21 @@ function DraggableIssue({ issue, children }: { issue: Issue; children: React.Rea
 function DroppableColumn({ id, children }: { id: string; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id })
 
+  const getColumnColor = (columnId: string) => {
+    switch (columnId) {
+      case "new": return "bg-blue-50 border-blue-200"
+      case "investigating": return "bg-green-50 border-green-200"
+      case "resolving": return "bg-orange-50 border-orange-200"
+      case "monitoring": return "bg-purple-50 border-purple-200"
+      default: return "bg-gray-50 border-gray-200"
+    }
+  }
+
   return (
     <div
       ref={setNodeRef}
       className={`min-h-96 p-4 rounded-lg border-2 transition-colors space-y-2 ${
-        isOver ? "bg-yellow-100 border-yellow-400" : "bg-gray-50 border-gray-200"
+        isOver ? "bg-yellow-100 border-yellow-400" : getColumnColor(id)
       }`}
     >
       {children}
@@ -70,9 +80,9 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
 
   const statusDetails: Record<string, { label: string; icon: React.ReactNode }> = {
     new: { label: "New", icon: <Clock className="w-5 h-5 mr-2 text-blue-600" /> },
-    investigating: { label: "Investigating", icon: <FileSearch className="w-5 h-5 mr-2 text-purple-600" /> },
-    resolving: { label: "Resolving", icon: <Wrench className="w-5 h-5 mr-2 text-green-600" /> },
-    monitoring: { label: "Monitoring", icon: <Eye className="w-5 h-5 mr-2 text-gray-600" /> },
+    investigating: { label: "Investigating", icon: <FileSearch className="w-5 h-5 mr-2 text-green-600" /> },
+    resolving: { label: "Resolving", icon: <Wrench className="w-5 h-5 mr-2 text-orange-600" /> },
+    monitoring: { label: "Monitoring", icon: <Eye className="w-5 h-5 mr-2 text-purple-600" /> },
   }
 
   const getPriorityColor = (priority: string) => {

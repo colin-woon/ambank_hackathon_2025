@@ -19,6 +19,7 @@ import { DuplicateDetectionResponse } from '@/types/duplicate-detection';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import PriorityScoreCard from "./priority-score-card"
+import { UploadButton } from "../lib/uploadthing"
 
 interface IssueModalProps {
   issue: Issue | null
@@ -391,14 +392,38 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 )}
               </div>
             </Section>
-              {editedIssue.mediaUrls && editedIssue.mediaUrls.length > 0 && (
-                <Section title="Media Attachments 📎">
-                  <div className="space-y-4">
+
+            <Section title="Media Attachments 📎">
+              <div className="space-y-4">
+                <UploadButton
+                  endpoint="imageUploader"
+                  onClientUploadComplete={(res) => {
+                    const urls = res.map((f) => f.url)
+                    setEditedIssue((prev) =>
+                      prev ? { ...prev, mediaUrls: [...(prev.mediaUrls || []), ...urls] } : prev
+                    )
+                  }}
+                  onUploadError={(error) => {
+                    console.error("Upload error", error)
+                  }}
+                  appearance={{
+                    container: "!mt-2 !w-full !flex !justify-start",
+                    button:
+                      "!px-4 !py-2 !border !border-red-600 !text-red-600 !bg-white !hover:bg-red-50 !rounded !text-sm !shadow-none !font-medium",
+                  }}
+                />
+
+                {editedIssue.mediaUrls && editedIssue.mediaUrls.length > 0 && (
+                  <div className="space-y-4 mt-4">
                     {editedIssue.mediaUrls.map((url, idx) => (
                       <div key={idx} className="flex items-center space-x-4 border p-2 rounded">
                         <div className="w-20 h-20 flex items-center justify-center bg-gray-100 border rounded text-xs text-gray-700">
                           {url.match(/\.(jpe?g|png|gif|webp)$/i) ? (
-                            <img src={url} alt={`Attachment ${idx + 1}`} className="w-full h-full object-cover rounded" />
+                            <img
+                              src={url}
+                              alt={`Attachment ${idx + 1}`}
+                              className="w-full h-full object-cover rounded"
+                            />
                           ) : url.endsWith(".pdf") ? (
                             "PDF"
                           ) : (
@@ -407,15 +432,32 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                         </div>
                         <div className="flex-1">
                           <div className="text-sm truncate">{url.split("/").pop()?.split("?")[0]}</div>
-                          <a href={url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline">
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 underline"
+                          >
                             Open
                           </a>
                         </div>
+                        <button
+                          onClick={() => {
+                            const updated = editedIssue.mediaUrls!.filter((_, i) => i !== idx)
+                            setEditedIssue({ ...editedIssue, mediaUrls: updated })
+                          }}
+                          className="text-xs text-red-600 hover:underline"
+                        >
+                          Remove
+                        </button>
                       </div>
                     ))}
                   </div>
-                </Section>
-              )}
+                )}
+              </div>
+            </Section>
+
+
           </div>
 
           {/* Right Column */}
