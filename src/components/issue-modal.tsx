@@ -395,57 +395,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
           {/* Right Column */}
           <div className="col-span-1 space-y-4">
             <Section title="AI Co-Pilot" icon={<Bot className="text-red-600" />}>
-              {/* <Button className="w-full bg-red-600 hover:bg-red-700">Calculate Priority Score</Button>
-              <div className="flex justify-around text-center p-2 bg-white rounded-lg">
-                <div>
-                  <input
-                    type="number"
-                    min="0"
-                    max="6"
-                    value={editedIssue.aiSuggestions?.impactScore || 0}
-                    onChange={(e) => {
-                      const value = Math.min(6, Math.max(0, parseInt(e.target.value) || 0));
-                      handleChange("aiSuggestions", {
-                        ...editedIssue.aiSuggestions,
-                        impactScore: value,
-                        totalScore: value + (editedIssue.aiSuggestions?.complexityScore || 0)
-                      });
-                    }}
-                    className="text-3xl font-bold text-blue-600 w-20 text-center bg-transparent border-none outline-none"
-                  />
-                  <div className="text-xs text-gray-500">Impact Score</div>
-                </div>
-                <div>
-                  <input
-                    type="number"
-                    min="0"
-                    max="12"
-                    value={editedIssue.aiSuggestions?.complexityScore || 0}
-                    onChange={(e) => {
-                      const value = Math.min(12, Math.max(0, parseInt(e.target.value) || 0));
-                      handleChange("aiSuggestions", {
-                        ...editedIssue.aiSuggestions,
-                        complexityScore: value,
-                        totalScore: value + (editedIssue.aiSuggestions?.impactScore || 0)
-                      });
-                    }}
-                    className="text-3xl font-bold text-purple-600 w-20 text-center bg-transparent border-none outline-none"
-                  />
-                  <div className="text-xs text-gray-500">Complexity Score</div>
-                </div>
-              </div>
-              <div className="text-center p-2 bg-white rounded-lg">
-                <div className="text-3xl font-bold text-gray-800">{editedIssue.aiSuggestions?.totalScore || 0}</div>
-                <div className="text-xs text-gray-500">Total Score</div>
-              </div>
-              <div className="text-center p-3 bg-orange-100 text-orange-700 rounded-lg font-semibold">
-                {editedIssue.aiSuggestions?.suggestedPriority || "N/A"}
-                <div className="text-xs font-normal">Suggested Priority</div>
-              </div>
-              <div className="flex items-center text-sm text-yellow-600 p-2 bg-yellow-50 rounded-md">
-                <AlertCircle className="w-4 h-4 mr-2" />
-                Priority score calculation might take a few moments.
-              </div> */}
+
               <PriorityScoreCard editedIssue={editedIssue} setEditedIssue={setEditedIssue} />
 
               <DetectDuplicateButton
