@@ -1,5 +1,6 @@
 "use client"
-
+import { doc, updateDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 import { useState, useEffect, useMemo } from "react"
 import type { Issue } from "@/types/issue"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog"
@@ -141,13 +142,21 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
   const handleSaveChanges = async () => {
     if (!editedIssue) return
 
-    const updatedIssue = {
-      ...editedIssue,
-    }
+    try {
+      const issueRef = doc(db, "issues", editedIssue.id)
+      await updateDoc(issueRef, {
+        ...editedIssue,
+        updatedAt: new Date(),
+      })
 
-    onUpdate(updatedIssue)
-    onClose()
+      onUpdate(editedIssue)
+      onClose()
+    } catch (error) {
+      console.error("Error saving issue:", error)
+      alert("Failed to save changes. Please try again.")
+    }
   }
+
 
 
   const { outstanding, percentCleansed, percentCleansedValue } = useMemo(() => {

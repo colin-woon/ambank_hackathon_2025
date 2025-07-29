@@ -9,7 +9,7 @@ import { CreateIssueModal } from "@/components/create-issue-modal"
 import { IssueModal } from "@/components/issue-modal"
 import type { Issue } from "@/types/issue"
 import { mockIssues } from "@/lib/mock-data"
-import { firestore } from "@/lib/firebase"
+import { db } from "@/lib/firebase"
 import { collection, getDocs, Timestamp } from "firebase/firestore"
 import { HomeDashboard } from "@/components/home-dashboard"
 import { MergedDashboard } from "@/components/merged-dashboard"
@@ -22,7 +22,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchIssues = async () => {
-      const issuesCollection = collection(firestore, "issues")
+      const issuesCollection = collection(db, "issues")
       const issueSnapshot = await getDocs(issuesCollection)
       const issuesList = issueSnapshot.docs.map((doc) => {
         const data = doc.data()

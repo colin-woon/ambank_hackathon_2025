@@ -3,7 +3,6 @@ export interface Issue {
   id: string
   description: string
   priority: "Super High" | "High" | "Medium" | "Low" | "N/A"
-  mediaFiles?: File[] // for frontend only (temporary)
   mediaUrls?: string[] // for uploaded file URLs (after backend or Firebase upload)
 
   // Requester & Source Info
@@ -37,6 +36,7 @@ export interface Issue {
   resolvedAt?: Date
   completedAt?: Date
   deadline: Date
+  updatedAt: Date
 
   // Aging Info
   agingDays?: number
