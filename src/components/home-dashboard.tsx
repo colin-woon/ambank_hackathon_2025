@@ -10,6 +10,7 @@ import { ChartConfig } from "@/components/ui/chart"
 
 interface HomeDashboardProps {
   issues: Issue[]
+  onIssueClick: (issue: Issue) => void
 }
 
 // Mock Data
@@ -101,7 +102,7 @@ const Top5Table = ({ title }: { title: string }) => (
   </Card>
 )
 
-export function HomeDashboard({ issues }: HomeDashboardProps) {
+export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
   const statusCounts = issues.reduce((acc, issue) => {
     acc[issue.status] = (acc[issue.status] || 0) + 1
     return acc
@@ -139,6 +140,12 @@ export function HomeDashboard({ issues }: HomeDashboardProps) {
     },
   } satisfies ChartConfig
 
+  const now = new Date();
+  const urgentFollowUps = issues
+    .filter(issue => issue.status !== 'closed' && issue.deadline && issue.deadline > now && issue.dsPicUid)
+    .sort((a, b) => a.deadline.getTime() - b.deadline.getTime())
+    .slice(0, 3);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
       {/* Left Column */}
@@ -161,11 +168,16 @@ export function HomeDashboard({ issues }: HomeDashboardProps) {
                 <CardTitle>Urgent Follow-ups</CardTitle>
             </CardHeader>
             <CardContent className="flex justify-around items-center pt-4">
-                {followUpData.map((item) => (
-                <div key={item.id} className="text-center">
+                {urgentFollowUps.map((item) => (
+                <div 
+                  key={item.id} 
+                  className="text-center cursor-pointer hover:bg-red-50 rounded-lg p-2 transition-colors"
+                  onClick={() => onIssueClick(item)}
+                >
                     <UserCircle className="w-16 h-16 mx-auto text-gray-400" />
-                    <p className="font-semibold mt-2">{item.assignee}</p>
+                    <p className="font-semibold mt-2">{item.dsPicUid || 'N/A'}</p>
                     <p className="text-sm text-red-600 font-mono">{item.id}</p>
+                    <p className="text-xs text-gray-500">Due: {item.deadline.toLocaleDateString()}</p>
                 </div>
                 ))}
             </CardContent>

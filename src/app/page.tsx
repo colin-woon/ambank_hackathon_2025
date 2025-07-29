@@ -118,7 +118,6 @@ export default function HomePage() {
           </div>
         </header>
 
-            {/* onIssueClick={handleIssueClick}  */}
         <main className="py-8">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center pt-50">
@@ -128,7 +127,7 @@ export default function HomePage() {
           ) : (
             <>
             <TabsContent value="Home" className="px-4 sm:px-6 lg:px-8">
-              <HomeDashboard issues={issues}/>
+              <HomeDashboard issues={issues} onIssueClick={handleIssueClick}/>
             </TabsContent>
 
             <TabsContent value="table">
