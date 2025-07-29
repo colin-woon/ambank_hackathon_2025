@@ -1,4 +1,4 @@
-import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, 
+import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid,
          Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 import type { Issue } from '@/types/issue';
 
@@ -11,7 +11,7 @@ export const ImpactEffortBubble = ({ issues }: ImpactEffortProps) => {
   const filteredIssues = issues.filter(
     issue => issue.impactedRecordTotal && issue.workingDays
   );
-  
+
   // Transform data for the chart
   const chartData = filteredIssues.map(issue => ({
     id: issue.id,
@@ -21,7 +21,7 @@ export const ImpactEffortBubble = ({ issues }: ImpactEffortProps) => {
     priority: issue.priority,
     description: issue.description?.substring(0, 50) + (issue.description?.length > 50 ? '...' : '')
   }));
-  
+
   // Priority to color mapping
   const priorityColors = {
     "Super High": "#ff0000",
@@ -30,11 +30,11 @@ export const ImpactEffortBubble = ({ issues }: ImpactEffortProps) => {
     "Low": "#82ca9d",
     "N/A": "#8884d8"
   };
-  
+
   // Calculate average values for reference lines
   const avgEffort = chartData.reduce((sum, item) => sum + item.x, 0) / chartData.length || 0;
   const avgImpact = chartData.reduce((sum, item) => sum + item.y, 0) / chartData.length || 0;
-  
+
   // Custom tooltip
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -59,39 +59,61 @@ export const ImpactEffortBubble = ({ issues }: ImpactEffortProps) => {
         <ScatterChart
           margin={{ top: 20, right: 20, bottom: 70, left: 20 }}
         >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis 
-            type="number" 
-            dataKey="x" 
-            name="Working Days (Effort)" 
-            label={{ value: 'Working Days (Effort)', position: 'bottom', offset: 0 }}
+          <CartesianGrid stroke="#ccc" strokeWidth={2} strokeDasharray="3 3" />
+          <XAxis
+            type="number"
+            dataKey="x"
+            name="Working Days (Effort)"
+            label={{
+              value: 'Working Days (Effort)',
+              position: 'bottom', // can also try 'bottom', 'top'
+              offset: 30, // move label up/down
+              dy: 0,     // push text slightly further
+            }}
           />
-          <YAxis 
-            type="number" 
-            dataKey="y" 
-            name="Impacted Records (Impact)" 
-            label={{ value: 'Impacted Records (Impact)', angle: -90, position: 'insideLeft' }}
+          <YAxis
+            type="number"
+            dataKey="y"
+            name="Impacted Records (Impact)"
+            label={{
+              value: 'Impacted Records (Impact)',
+              angle: -90,
+              position: 'middle', // try 'insideRight', 'left'
+              dx: -30,  // move left/right
+              dy: 0    // move up/down
+            }}
           />
+
           <ZAxis type="number" dataKey="z" range={[100, 1000]} />
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
-          <ReferenceLine x={avgEffort} stroke="gray" strokeDasharray="3 3" />
-          <ReferenceLine y={avgImpact} stroke="gray" strokeDasharray="3 3" />
-          
+          <Legend
+            verticalAlign="top"
+            align="right"
+            wrapperStyle={{
+              top: -30,
+              left: 0,
+              position: 'absolute',
+            }}
+          />
+
+          <ReferenceLine x={avgEffort} stroke="blue" strokeDasharray="5 7" strokeWidth={3} strokeOpacity={0.6}/>
+          <ReferenceLine y={avgImpact} stroke="blue" strokeDasharray="5 7" strokeWidth={3} strokeOpacity={0.6}/>
+
+
           {/* Add quadrant labels */}
-          <text x="75%" y="25%" dy={-20} textAnchor="middle" fill="#666">
+          <text x="75%" y="10%" dy={-20} textAnchor="middle" fill="blue">
             Major Projects
           </text>
-          <text x="25%" y="25%" dy={-20} textAnchor="middle" fill="#666">
+          <text x="30%" y="10%" dy={-20} textAnchor="middle" fill="blue">
             Quick Wins
           </text>
-          <text x="75%" y="75%" dy={-20} textAnchor="middle" fill="#666">
+          <text x="75%" y="90%" dy={-20} textAnchor="middle" fill="blue">
             Fill-in Tasks
           </text>
-          <text x="25%" y="75%" dy={-20} textAnchor="middle" fill="#666">
+          <text x="30%" y="90%" dy={-20} textAnchor="middle" fill="blue">
             Thankless Tasks
           </text>
-          
+
           <Scatter
             name="Issues"
             data={chartData}
