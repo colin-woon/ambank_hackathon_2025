@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle, XCircle, Wrench, Zap, Eye } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+
 
 interface ResolutionDashboardProps {
   issues: Issue[]
@@ -85,22 +87,45 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
           <span>{issue.assignedAt.toLocaleDateString()}</span>
         </div>
 
-        {/* Show cleansing progress for cleansing issues */}
-        {issue.impactedRecordTotal && (
-          <div className="mb-2">
-            <div className="text-xs text-gray-600 mb-1">
-              Progress: {Math.round(((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}%
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-green-600 h-2 rounded-full"
-                style={{
-                  width: `${Math.round(((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}%`,
-                }}
-              ></div>
-            </div>
-          </div>
-        )}
+    {/* Cleansing Progress */}
+    {issue.impactedRecordTotal && (
+      <div className="mb-2">
+        <div className="text-xs text-gray-600 mb-1">
+          Cleansing Progress: {Math.round(((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}%
+        </div>
+        <Progress
+          value={Math.min(100, ((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}
+          className="h-2 [&>*]:bg-green-600"
+        />
+      </div>
+    )}
+
+    {/* System Enhancement */}
+    {issue.systemEnhancement === "yes" && typeof issue.systemEnhancementScore === "number" && (
+      <div className="mb-2">
+        <div className="text-xs text-gray-600 mb-1">
+          System Enhancement Score: {issue.systemEnhancementScore}%
+        </div>
+        <Progress
+          value={Math.min(100, issue.systemEnhancementScore)}
+          className="h-2 [&>*]:bg-blue-500"
+        />
+      </div>
+    )}
+
+    {/* Process Improvement */}
+    {issue.processImprovement === "yes" && typeof issue.processImprovementScore === "number" && (
+      <div className="mb-2">
+        <div className="text-xs text-gray-600 mb-1">
+          Process Improvement Score: {issue.processImprovementScore}%
+        </div>
+        <Progress
+          value={Math.min(100, issue.processImprovementScore)}
+          className="h-2 [&>*]:bg-yellow-500"
+        />
+      </div>
+    )}
+
 
         {showMoveButton && (
           <Button
