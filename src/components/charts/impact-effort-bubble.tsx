@@ -1,39 +1,60 @@
-import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid,
-         Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
-import type { Issue } from '@/types/issue';
+"use client";
+
+import React from "react";
+import {
+  ScatterChart,
+  Scatter,
+  XAxis,
+  YAxis,
+  ZAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  ReferenceLine,
+  Cell,
+} from "recharts";
+import type { Issue } from "@/types/issue";
 
 type ImpactEffortProps = {
   issues: Issue[];
+  onIssueClick: (issue: Issue) => void;
 };
 
-export const ImpactEffortBubble = ({ issues }: ImpactEffortProps) => {
+export const ImpactEffortBubble = ({ issues, onIssueClick }: ImpactEffortProps) => {
   // Filter valid issues with both impacted records and working days
   const filteredIssues = issues.filter(
-    issue => issue.impactedRecordTotal && issue.workingDays
+    (issue) => issue.impactedRecordTotal && issue.workingDays
   );
 
   // Transform data for the chart
-  const chartData = filteredIssues.map(issue => ({
+  const chartData = filteredIssues.map((issue) => ({
     id: issue.id,
-    x: issue.workingDays || 0,  // Effort
-    y: issue.impactedRecordTotal || 0,  // Impact
-    z: (issue.impactedRecordTotal || 0) * (issue.workingDays || 0) / 100,  // Bubble size based on effort score
+    x: issue.workingDays || 0, // Effort
+    y: issue.impactedRecordTotal || 0, // Impact
+    z:
+      ((issue.impactedRecordTotal || 0) * (issue.workingDays || 0)) /
+      100, // Bubble size
     priority: issue.priority,
-    description: issue.description?.substring(0, 50) + (issue.description?.length > 50 ? '...' : '')
+    description:
+      issue.description?.substring(0, 50) +
+      (issue.description?.length > 50 ? "..." : ""),
   }));
 
   // Priority to color mapping
   const priorityColors = {
     "Super High": "#ff0000",
-    "High": "#ff8042",
-    "Medium": "#ffbb28",
-    "Low": "#82ca9d",
-    "N/A": "#8884d8"
+    High: "#ff8042",
+    Medium: "#ffbb28",
+    Low: "#82ca9d",
+    "N/A": "#8884d8",
   };
 
   // Calculate average values for reference lines
-  const avgEffort = chartData.reduce((sum, item) => sum + item.x, 0) / chartData.length || 0;
-  const avgImpact = chartData.reduce((sum, item) => sum + item.y, 0) / chartData.length || 0;
+  const avgEffort =
+    chartData.reduce((sum, item) => sum + item.x, 0) / chartData.length || 0;
+  const avgImpact =
+    chartData.reduce((sum, item) => sum + item.y, 0) / chartData.length || 0;
 
   // Custom tooltip
   const CustomTooltip = ({ active, payload }: any) => {
@@ -54,21 +75,19 @@ export const ImpactEffortBubble = ({ issues }: ImpactEffortProps) => {
   };
 
   return (
-    <div className="w-full h-[400px]">
+    <div className="w-full h-[400px] relative">
       <ResponsiveContainer width="100%" height="100%">
-        <ScatterChart
-          margin={{ top: 20, right: 20, bottom: 70, left: 20 }}
-        >
+        <ScatterChart margin={{ top: 20, right: 20, bottom: 70, left: 20 }}>
           <CartesianGrid stroke="#ccc" strokeWidth={2} strokeDasharray="3 3" />
           <XAxis
             type="number"
             dataKey="x"
             name="Working Days (Effort)"
             label={{
-              value: 'Working Days (Effort)',
-              position: 'bottom', // can also try 'bottom', 'top'
-              offset: 30, // move label up/down
-              dy: 0,     // push text slightly further
+              value: "Working Days (Effort)",
+              position: "bottom",
+              offset: 30,
+              dy: 0,
             }}
           />
           <YAxis
@@ -76,14 +95,13 @@ export const ImpactEffortBubble = ({ issues }: ImpactEffortProps) => {
             dataKey="y"
             name="Impacted Records (Impact)"
             label={{
-              value: 'Impacted Records (Impact)',
+              value: "Impacted Records (Impact)",
               angle: -90,
-              position: 'middle', // try 'insideRight', 'left'
-              dx: -30,  // move left/right
-              dy: 0    // move up/down
+              position: "middle",
+              dx: -30,
+              dy: 0,
             }}
           />
-
           <ZAxis type="number" dataKey="z" range={[100, 1000]} />
           <Tooltip content={<CustomTooltip />} />
           <Legend
@@ -92,15 +110,25 @@ export const ImpactEffortBubble = ({ issues }: ImpactEffortProps) => {
             wrapperStyle={{
               top: -30,
               left: 0,
-              position: 'absolute',
+              position: "absolute",
             }}
           />
+          <ReferenceLine
+            x={avgEffort}
+            stroke="blue"
+            strokeDasharray="5 7"
+            strokeWidth={3}
+            strokeOpacity={0.6}
+          />
+          <ReferenceLine
+            y={avgImpact}
+            stroke="blue"
+            strokeDasharray="5 7"
+            strokeWidth={3}
+            strokeOpacity={0.6}
+          />
 
-          <ReferenceLine x={avgEffort} stroke="blue" strokeDasharray="5 7" strokeWidth={3} strokeOpacity={0.6}/>
-          <ReferenceLine y={avgImpact} stroke="blue" strokeDasharray="5 7" strokeWidth={3} strokeOpacity={0.6}/>
-
-
-          {/* Add quadrant labels */}
+          {/* Quadrant labels */}
           <text x="75%" y="10%" dy={-20} textAnchor="middle" fill="blue">
             Major Projects
           </text>
@@ -114,17 +142,22 @@ export const ImpactEffortBubble = ({ issues }: ImpactEffortProps) => {
             Thankless Tasks
           </text>
 
-          <Scatter
-            name="Issues"
-            data={chartData}
-            fill="#8884d8"
-          >
-            {chartData.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={priorityColors[entry.priority as keyof typeof priorityColors] || "#8884d8"}
-              />
-            ))}
+          <Scatter name="Issues" data={chartData} fill="#8884d8">
+            {chartData.map((entry, index) => {
+              const fullIssue = issues.find((i) => i.id === entry.id);
+              return (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={
+                    priorityColors[
+                      entry.priority as keyof typeof priorityColors
+                    ] || "#8884d8"
+                  }
+                  onClick={() => fullIssue && onIssueClick(fullIssue)}
+                  style={{ cursor: "pointer" }}
+                />
+              );
+            })}
           </Scatter>
         </ScatterChart>
       </ResponsiveContainer>

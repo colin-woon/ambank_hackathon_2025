@@ -645,6 +645,11 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                       onValueChange={([val]) => handleChange("systemEnhancementScore", val)}
                       max={100}
                       step={1}
+                      className="
+                        h-2
+                        [&_[data-slot='slider-track']]:bg-gray-200
+                        [&_[data-slot='slider-range']]:bg-blue-500
+                      "
                     />
                     <span className="w-10 text-right text-sm text-gray-700">
                       {editedIssue.systemEnhancementScore ?? 0}
@@ -660,6 +665,11 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                         onValueChange={([val]) => handleChange("processImprovementScore", val)}
                         max={100}
                         step={1}
+                        className="
+                        h-2
+                        [&_[data-slot='slider-track']]:bg-gray-200
+                        [&_[data-slot='slider-range']]:bg-yellow-500
+                      "
                       />
                       <span className="w-10 text-right text-sm text-gray-700">
                         {editedIssue.processImprovementScore ?? 0}
