@@ -1,6 +1,7 @@
 "use client"
 
 import type { Issue } from "@/types/issue"
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,16 +13,10 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-  useDroppable,
-  useDraggable,
+  DragOverlay,
 } from "@dnd-kit/core"
-import {
-  Clock,
-  FileSearch,
-  Wrench,
-  Eye,
-  CheckCircle,
-} from "lucide-react"
+import { useDraggable, useDroppable } from "@dnd-kit/core"
+import { Clock, FileSearch, Wrench, Eye, CheckCircle } from "lucide-react"
 
 interface MergedDashboardProps {
   issues: Issue[]
@@ -30,17 +25,17 @@ interface MergedDashboardProps {
 }
 
 function DraggableIssue({ issue, children }: { issue: Issue; children: React.ReactNode }) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: issue.id })
+  const { attributes, listeners, setNodeRef } = useDraggable({ id: issue.id })
 
   return (
-    <div
-      ref={setNodeRef}
-      style={{
-        transform: transform ? `translate(${transform.x}px, ${transform.y}px)` : undefined,
-      }}
-      {...listeners}
-      {...attributes}
-    >
+    <div ref={setNodeRef} className="relative">
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 cursor-grab z-10"
+      >
+        :::
+      </div>
       {children}
     </div>
   )
@@ -63,6 +58,7 @@ function DroppableColumn({ id, children }: { id: string; children: React.ReactNo
 
 export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedDashboardProps) {
   const sensors = useSensors(useSensor(PointerSensor))
+  const [activeIssue, setActiveIssue] = useState<Issue | null>(null)
 
   const filteredIssues = issues.filter((i) => i.status !== "closed")
   const grouped = {
@@ -90,6 +86,7 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
+    setActiveIssue(null)
     if (!over || active.id === over.id) return
 
     const draggedIssue = issues.find((i) => i.id === active.id)
@@ -105,77 +102,81 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
   }
 
   const IssueCard = ({ issue }: { issue: Issue }) => (
-    <DraggableIssue issue={issue}>
-      <Card
-        className={`cursor-pointer hover:shadow-md transition-shadow border-l-4 ${getPriorityColor(issue.priority)}`}
-        onClick={() => onIssueClick(issue)}
-      >
-        <CardHeader className="pb-2">
-          <div className="flex justify-between items-start">
-            <CardTitle className="text-sm font-medium text-red-700">{issue.id}</CardTitle>
-            <Badge variant="outline" className="text-xs">{issue.priority}</Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <p className="text-sm text-gray-700 mb-2 line-clamp-2">{issue.description}</p>
-          <div className="flex justify-between text-xs text-gray-500 mb-2">
-            <span>{issue.dsPicUid ?? issue.requesterName}</span>
-            <span>{issue.createdAt?.toLocaleDateString?.() ?? issue.assignedAt?.toLocaleDateString?.() ?? "N/A"}</span>
-          </div>
+    <Card
+      className={`cursor-pointer hover:shadow-md transition-shadow border-l-4 ${getPriorityColor(issue.priority)}`}
+      onClick={() => onIssueClick(issue)}
+    >
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-sm font-medium text-red-700">{issue.id}</CardTitle>
+          <Badge variant="outline" className="text-xs">{issue.priority}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <p className="text-sm text-gray-700 mb-2 line-clamp-2">{issue.description}</p>
+        <div className="flex justify-between text-xs text-gray-500 mb-2">
+          <span>{issue.dsPicUid ?? issue.requesterName}</span>
+          <span>{issue.createdAt?.toLocaleDateString?.() ?? issue.assignedAt?.toLocaleDateString?.() ?? "N/A"}</span>
+        </div>
 
-          {issue.impactedRecordTotal && (
-            <div className="mb-2">
-              <div className="text-xs text-gray-600 mb-1">
-                Cleansing Progress: {Math.round(((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}%
-              </div>
-              <Progress
-                value={Math.min(100, ((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}
-                className="h-2 [&>*]:bg-green-600"
-              />
+        {issue.impactedRecordTotal && (
+          <div className="mb-2">
+            <div className="text-xs text-gray-600 mb-1">
+              Cleansing Progress: {Math.round(((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}%
             </div>
-          )}
-
-          {issue.systemEnhancement === "yes" && typeof issue.systemEnhancementScore === "number" && (
-            <div className="mb-2">
-              <div className="text-xs text-gray-600 mb-1">System Enhancement Score: {issue.systemEnhancementScore}%</div>
-              <Progress value={Math.min(100, issue.systemEnhancementScore)} className="h-2 [&>*]:bg-blue-500" />
-            </div>
-          )}
-
-          {issue.processImprovement === "yes" && typeof issue.processImprovementScore === "number" && (
-            <div className="mb-2">
-              <div className="text-xs text-gray-600 mb-1">Process Improvement Score: {issue.processImprovementScore}%</div>
-              <Progress value={Math.min(100, issue.processImprovementScore)} className="h-2 [&>*]:bg-yellow-500" />
-            </div>
-          )}
-
-          <div className="flex gap-2 mt-2">
-            <Button size="sm" variant="outline" className="flex-1 text-green-700 border-green-300 hover:bg-green-50 bg-transparent"
-              onClick={(e) => {
-                e.stopPropagation()
-                onUpdateIssue({ ...issue, status: "closed", completedAt: new Date() })
-              }}
-            >
-              <CheckCircle className="w-3 h-3 mr-1" /> Close
-            </Button>
-            <Button size="sm" variant="outline" className="flex-1 text-blue-700 border-blue-300 hover:bg-blue-50 bg-transparent"
-              onClick={(e) => {
-                e.stopPropagation()
-                onUpdateIssue({ ...issue, status: "resolved", resolvedAt: new Date() })
-              }}
-            >
-              <CheckCircle className="w-3 h-3 mr-1" /> Resolve
-            </Button>
+            <Progress
+              value={Math.min(100, ((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}
+              className="h-2 [&>*]:bg-green-600"
+            />
           </div>
-        </CardContent>
-      </Card>
-    </DraggableIssue>
+        )}
+
+        {issue.systemEnhancement === "yes" && typeof issue.systemEnhancementScore === "number" && (
+          <div className="mb-2">
+            <div className="text-xs text-gray-600 mb-1">System Enhancement Score: {issue.systemEnhancementScore}%</div>
+            <Progress value={Math.min(100, issue.systemEnhancementScore)} className="h-2 [&>*]:bg-blue-500" />
+          </div>
+        )}
+
+        {issue.processImprovement === "yes" && typeof issue.processImprovementScore === "number" && (
+          <div className="mb-2">
+            <div className="text-xs text-gray-600 mb-1">Process Improvement Score: {issue.processImprovementScore}%</div>
+            <Progress value={Math.min(100, issue.processImprovementScore)} className="h-2 [&>*]:bg-yellow-500" />
+          </div>
+        )}
+
+        <div className="flex gap-2 mt-2">
+          <Button size="sm" variant="outline" className="flex-1 text-green-700 border-green-300 hover:bg-green-50 bg-transparent"
+            onClick={(e) => {
+              e.stopPropagation()
+              onUpdateIssue({ ...issue, status: "closed", completedAt: new Date() })
+            }}
+          >
+            <CheckCircle className="w-3 h-3 mr-1" /> Close
+          </Button>
+          <Button size="sm" variant="outline" className="flex-1 text-blue-700 border-blue-300 hover:bg-blue-50 bg-transparent"
+            onClick={(e) => {
+              e.stopPropagation()
+              onUpdateIssue({ ...issue, status: "resolved", resolvedAt: new Date() })
+            }}
+          >
+            <CheckCircle className="w-3 h-3 mr-1" /> Resolve
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter}
+      onDragStart={({ active }) => {
+        const dragged = issues.find(i => i.id === active.id)
+        if (dragged) setActiveIssue(dragged)
+      }}
+      onDragEnd={handleDragEnd}
+    >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {["new", "investigating", "resolving", "monitoring"].map((status) => (
+        {Object.keys(grouped).map((status) => (
           <div key={status}>
             <h2 className="text-lg font-semibold text-gray-800 flex items-center mb-2">
               {statusDetails[status].icon}
@@ -183,12 +184,17 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
             </h2>
             <DroppableColumn id={status}>
               {grouped[status].map((issue) => (
-                <IssueCard key={issue.id} issue={issue} />
+                <DraggableIssue key={issue.id} issue={issue}>
+                  <IssueCard issue={issue} />
+                </DraggableIssue>
               ))}
             </DroppableColumn>
           </div>
         ))}
       </div>
+      <DragOverlay>
+        {activeIssue && <IssueCard issue={activeIssue} />}
+      </DragOverlay>
     </DndContext>
   )
 }
