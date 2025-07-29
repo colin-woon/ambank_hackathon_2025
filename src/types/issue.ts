@@ -2,8 +2,9 @@ export interface Issue {
   // Core Details
   id: string
   description: string
-  priority: "Super High" | "High" | "Medium" | "Low"
-  mediaAttachments: string[]
+  priority: "Super High" | "High" | "Medium" | "Low" | "N/A"
+  mediaFiles?: File[] // for frontend only (temporary)
+  mediaUrls?: string[] // for uploaded file URLs (after backend or Firebase upload)
 
   // Requester & Source Info
   requesterName: string
@@ -22,7 +23,6 @@ export interface Issue {
   createdByUid: string
   dqPicUid?: string
   dsPicUid?: string
-  itPicUid?: string
 
   // Timestamps
   createdAt: Date

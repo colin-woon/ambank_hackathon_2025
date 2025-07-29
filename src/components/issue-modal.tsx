@@ -52,6 +52,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
   const [agingDays, setAgingDays] = useState<number | null>(null);
   const [agingMonths, setAgingMonths] = useState<number | null>(null);
   const [agingBucket, setAgingBucket] = useState<string | null>(null);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (!editedIssue?.assignedAt) {
@@ -91,12 +92,35 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     }
   }
 
-  const handleSaveChanges = () => {
-    if (editedIssue) {
-      onUpdate(editedIssue)
-      onClose()
-    }
+  const uploadFiles = async (files: File[]): Promise<string[]> => {
+    // Simulated upload – replace with real upload logic (Firebase, S3, etc.)
+    return Promise.all(
+      files.map((file) =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve(URL.createObjectURL(file)), 500)
+        )
+      )
+    )
   }
+
+  const handleSaveChanges = async () => {
+    if (!editedIssue) return
+
+    let uploadedUrls: string[] = []
+
+    if (mediaFiles.length > 0) {
+      uploadedUrls = await uploadFiles(mediaFiles) // 👈 implement this function
+    }
+
+    const updatedIssue = {
+      ...editedIssue,
+      mediaUrls: [...(editedIssue.mediaUrls || []), ...uploadedUrls],
+    }
+
+    onUpdate(updatedIssue)
+    onClose()
+  }
+
 
   const { outstanding, percentCleansed, percentCleansedValue } = useMemo(() => {
     if (!editedIssue)
@@ -236,6 +260,68 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
             <Section title="System Enhancement / Process Improvement Notes">
                 <Textarea value={editedIssue.systemEnhancementNotes || ""} onChange={(e) => handleChange("systemEnhancementNotes", e.target.value)} rows={4} />
             </Section>
+            <Section title="Add Media">
+              <div>
+                <Label className="font-semibold">Add Media</Label>
+                <Input
+                  type="file"
+                  multiple
+                  className="mt-1"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      const newFiles = Array.from(e.target.files)
+                      setMediaFiles((prev) => [...prev, ...newFiles])
+                    }
+                  }}
+                />
+                {mediaFiles.length > 0 && (
+                  <div className="mt-2 text-xs text-gray-600">
+                    <p className="mb-1">New Files to Upload:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      {mediaFiles.map((file, idx) => (
+                        <li key={idx} className="flex justify-between">
+                          {file.name}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMediaFiles((prev) => prev.filter((_, i) => i !== idx))
+                            }}
+                            className="text-red-500 text-xs hover:underline ml-2"
+                          >
+                            Remove
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </Section>
+              {editedIssue.mediaUrls && editedIssue.mediaUrls.length > 0 && (
+                <Section title="Media Attachments 📎">
+                  <div className="space-y-4">
+                    {editedIssue.mediaUrls.map((url, idx) => (
+                      <div key={idx} className="flex items-center space-x-4 border p-2 rounded">
+                        <div className="w-20 h-20 flex items-center justify-center bg-gray-100 border rounded text-xs text-gray-700">
+                          {url.match(/\.(jpe?g|png|gif|webp)$/i) ? (
+                            <img src={url} alt={`Attachment ${idx + 1}`} className="w-full h-full object-cover rounded" />
+                          ) : url.endsWith(".pdf") ? (
+                            "PDF"
+                          ) : (
+                            "FILE"
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm truncate">{url.split("/").pop()?.split("?")[0]}</div>
+                          <a href={url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 underline">
+                            Open
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Section>
+              )}
           </div>
 
           {/* Right Column */}
