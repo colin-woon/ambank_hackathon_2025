@@ -47,11 +47,25 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
         const bValue = b[sortConfig.key]
 
         // Handle dates
-        if (sortConfig.key === "pickedUpAt" || sortConfig.key === "deadline" || sortConfig.key === "createdAt") {
-          const aTime = aValue instanceof Date ? aValue.getTime() : 0
-          const bTime = bValue instanceof Date ? bValue.getTime() : 0
-          return sortConfig.direction === "asc" ? aTime - bTime : bTime - aTime
-        }
+       if (sortConfig.key === "pickedUpAt" || sortConfig.key === "deadline" || sortConfig.key === "createdAt") {
+  // Helper function to get timestamp from various date formats
+  const getTimeValue = (value: any) => {
+    if (!value) return -1; // No value case
+    if (value instanceof Date) return value.getTime();
+    if (value.seconds) return value.seconds * 1000; // Firestore timestamp
+    return -1; // Invalid format case
+  };
+  
+  const aTime = getTimeValue(aValue);
+  const bTime = getTimeValue(bValue);
+  
+  // If one value exists but the other doesn't, prioritize the existing one
+  if (aTime === -1 && bTime !== -1) return 1; // Push a (N/A) to the end
+  if (aTime !== -1 && bTime === -1) return -1; // Push b (N/A) to the end
+  
+  // Normal comparison when both values exist
+  return sortConfig.direction === "asc" ? aTime - bTime : bTime - aTime;
+}
 
         // Handle numeric values
         if (sortConfig.key === "agingDays" || sortConfig.key === "agingMonths") {
@@ -214,9 +228,23 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
                 >
                   {issue.impactedArea}
                 </TableCell>
-                <TableCell>{issue.pickedUpAt && issue.pickedUpAt instanceof Date ? issue.pickedUpAt.toLocaleDateString() : "N/A"}</TableCell>
-                <TableCell>{issue.deadline && issue.deadline instanceof Date ? issue.deadline.toLocaleDateString() : "N/A"}</TableCell>
-                <TableCell>{issue.agingDays || "N/A"}</TableCell>
+                <TableCell>
+                  {issue.pickedUpAt ? 
+                    (issue.pickedUpAt instanceof Date ? 
+                      issue.pickedUpAt.toLocaleDateString() : 
+                      // Handle Firestore timestamp
+                      new Date(issue.pickedUpAt.seconds * 1000).toLocaleDateString()
+                    ) : "N/A"}
+                </TableCell>                
+                <TableCell>
+                  {issue.deadline ? 
+                    (issue.deadline instanceof Date ? 
+                      issue.deadline.toLocaleDateString() : 
+                      // Handle Firestore timestamp
+                      new Date(issue.deadline.seconds * 1000).toLocaleDateString()
+                    ) : "N/A"}
+                </TableCell>                
+<TableCell>{issue.agingDays || "N/A"}</TableCell>
               </TableRow>
             ))}
           </TableBody>

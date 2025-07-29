@@ -44,6 +44,8 @@ export default function HomePage() {
             ...data,
             id: doc.id,
             createdAt: convertTimestamp(data.createdAt),
+            pickedUpAt: convertTimestamp(data.pickedUpAt),
+            updatedAt: convertTimestamp(data.updatedAt),
             deadline: convertTimestamp(data.deadline),
             assignedAt: data.assignedAt ? convertTimestamp(data.assignedAt) : new Date(),
           } as Issue;
