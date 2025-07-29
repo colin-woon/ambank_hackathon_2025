@@ -79,7 +79,7 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <p className="text-sm text-gray-700 mb-2 line-clamp-2">{issue.description}</p>
+        <p className="text-sm text-gray-700 mb-2 line-clamp-1">{issue.description}</p>
         <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
           <span>{issue.dsPicUid}</span>
           <span>{issue.assignedAt.toLocaleDateString()}</span>
