@@ -173,7 +173,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
           {/* Left Column */}
           <div className="col-span-2 space-y-4">
             <Section title="Core Details">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-2">
                 <Field label="Status">
                   <Select value={editedIssue.status} onValueChange={(v) => handleChange("status", v)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -188,6 +188,34 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     </SelectContent>
                   </Select>
                 </Field>
+
+                <div className="flex items-center gap-6 mt-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="systemEnhancement"
+                      checked={editedIssue.systemEnhancement === "yes"}
+                      onChange={(e) =>
+                        handleChange("systemEnhancement", e.target.checked ? "yes" : "no")
+                      }
+                      className="accent-red-600"
+                    />
+                    <Label htmlFor="systemEnhancement">System Enhancement</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="processImprovement"
+                      checked={editedIssue.processImprovement === "yes"}
+                      onChange={(e) =>
+                        handleChange("processImprovement", e.target.checked ? "yes" : "no")
+                      }
+                      className="accent-red-600"
+                    />
+                    <Label htmlFor="processImprovement">Process Improvement</Label>
+                  </div>
+                </div>
+
                 <div className="flex justify-end items-end gap-3">
                 <Field label="Priority">
                   <Select value={editedIssue.priority} onValueChange={(v) => handleChange("priority", v)}>
