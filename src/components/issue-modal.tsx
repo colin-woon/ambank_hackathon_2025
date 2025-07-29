@@ -204,8 +204,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     <SelectContent>
                       <SelectItem value="new">New</SelectItem>
                       <SelectItem value="investigating">Investigating</SelectItem>
-                      <SelectItem value="cleansing">Cleansing</SelectItem>
-                      <SelectItem value="enhancing">Enhancing</SelectItem>
+                      <SelectItem value="resolving">Cleansing</SelectItem>
                       <SelectItem value="monitoring">Monitoring</SelectItem>
                       <SelectItem value="closed">Closed</SelectItem>
                       <SelectItem value="resolved">Resolved</SelectItem>
