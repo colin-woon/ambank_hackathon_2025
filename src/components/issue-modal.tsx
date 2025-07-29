@@ -76,9 +76,12 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     const assigned = new Date(editedIssue.assignedAt);
 
     const days = getWorkingDaysBetween(assigned, now);
-    const months =
+    const months = Math.max(
+      0,
       (now.getFullYear() - assigned.getFullYear()) * 12 +
-      now.getMonth() - assigned.getMonth();
+      now.getMonth() - assigned.getMonth()
+    );
+
 
     setAgingDays(days);
     setAgingMonths(months);
