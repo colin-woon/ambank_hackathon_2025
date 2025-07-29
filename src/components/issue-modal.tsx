@@ -571,6 +571,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
               </Field>
             </Section>
 
+
           </div>
         </div>
         <DialogFooter>
