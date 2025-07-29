@@ -71,6 +71,7 @@ export interface Issue {
   // Notes & Remarks
   extraRemarks?: string
   systemEnhancementNotes?: string
+  processImprovementNotes?: string
 
   // AI Co-Pilot
   aiSuggestions?: {
