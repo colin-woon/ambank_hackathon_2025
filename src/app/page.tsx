@@ -45,9 +45,11 @@ export default function HomePage() {
             id: doc.id,
             createdAt: convertTimestamp(data.createdAt),
             pickedUpAt: convertTimestamp(data.pickedUpAt),
-            updatedAt: convertTimestamp(data.updatedAt),
+            assignedAt: convertTimestamp(data.assignedAt),
+            resolvedAt: convertTimestamp(data.resolvedAt),
+            closedAt: convertTimestamp(data.closedAt),
             deadline: convertTimestamp(data.deadline),
-            assignedAt: data.assignedAt ? convertTimestamp(data.assignedAt) : new Date(),
+            updatedAt: convertTimestamp(data.updatedAt),
           } as Issue;
         });
         setIssues(issuesList);

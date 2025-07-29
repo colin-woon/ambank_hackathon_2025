@@ -121,8 +121,8 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
       updatedAt: new Date(),
       ...(newStatus === "investigating" ? { pickedUpAt: new Date() } : {}),
       ...(newStatus === "resolving" ? { assignedAt: new Date() } : {}),
-      ...(newStatus === "monitoring" ? { completedAt: new Date() } : {}),
-      ...(newStatus === "closed" ? { resolvedAt: new Date() } : {}),
+      ...(newStatus === "monitoring" ? { resolvedAt: new Date() } : {}),
+      ...(newStatus === "closed" ? { closedAt: new Date() } : {}),
     }
 
     // Local state update
@@ -136,8 +136,8 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
         updatedAt: updated.updatedAt,
         ...(updated.pickedUpAt && { pickedUpAt: updated.pickedUpAt }),
         ...(updated.assignedAt && { assignedAt: updated.assignedAt }),
-        ...(updated.completedAt && { completedAt: updated.completedAt }),
         ...(updated.resolvedAt && { resolvedAt: updated.resolvedAt }),
+        ...(updated.closedAt && { closedAt: updated.closedAt }),
       })
     } catch (err) {
       console.error("Failed to update status:", err)
@@ -192,7 +192,7 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
             <Button size="sm" variant="outline" className="flex-1 text-green-700 border-green-300 hover:bg-green-50 bg-transparent"
               onClick={(e) => {
                 e.stopPropagation()
-                onUpdateIssue({ ...issue, status: "closed", completedAt: new Date() })
+                onUpdateIssue({ ...issue, status: "closed", resolvedAt: new Date() })
               }}
             >
               <CheckCircle className="w-3 h-3 mr-1" /> Close

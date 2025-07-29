@@ -6,6 +6,9 @@ from detector import DuplicateDetector
 from models import PriorityScoreRequest, PriorityScoreResponse
 from priority_score import PriorityScorer
 
+from models import EmailSendRequest, EmailSendResponse
+from send_email import EmailSender
+
 logger = logging.getLogger(__name__)
 
 # ========== DUPLICATE DETECTION ==========
@@ -65,7 +68,7 @@ async def detect_duplicates(request: IssueRequest):
 #         logger.error(f"Error adding issue to knowledge base: {str(e)}")
 #         raise HTTPException(status_code=500, detail=str(e))
 
-# ========== DUPLICATE DETECTION ==========
+# ========== PRIORITY SCORER ==========
 
 scorer = PriorityScorer()
 
@@ -77,3 +80,18 @@ async def suggest_priority_score(request: PriorityScoreRequest):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+\
+# ========== SEND EMAIL ==========
+
+emailer = EmailSender()
+
+@router.post("/send-summary-email", response_model=EmailSendResponse)
+async def send_summary_email(request: EmailSendRequest):
+    """Send summarized issue details to Data Steward's email."""
+    print("Received:", request)
+    try:
+        emailer.send_email(request)
+        return {"status": "success", "message": "Email sent to Data Steward"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
