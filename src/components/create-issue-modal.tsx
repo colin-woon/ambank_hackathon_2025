@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import type { OurFileRouter } from "@/app/api/uploadthing/core"
 import { useState } from "react"
 import type { Issue } from "@/types/issue"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,24 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AlertTriangle, Search } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { UploadButton } from "../lib/uploadthing";
+
+export default function Home() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+      <UploadButton
+        endpoint="imageUploader"
+        onClientUploadComplete={(res) => {
+          console.log("Files: ", res);
+          alert("Upload Completed");
+        }}
+        onUploadError={(error: Error) => {
+          alert(`ERROR! ${error.message}`);
+        }}
+      />
+    </main>
+  );
+}
 
 interface CreateIssueModalProps {
   isOpen: boolean
@@ -32,13 +50,14 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
 
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false)
   const [duplicateIssueId, setDuplicateIssueId] = useState("")
+  const [mediaUrls, setMediaUrls] = useState<string[]>([])
+  const [uploading, setUploading] = useState(false)
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
   const checkForDuplicates = () => {
-    // Mock duplicate detection - in real implementation, this would call AI API
     if (
       formData.description.toLowerCase().includes("customer") ||
       formData.description.toLowerCase().includes("data format")
@@ -61,13 +80,12 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
       dqPicUid: "",
       itPicUid: "",
       assignedAt: now,
-      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      mediaAttachments: [],
+      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      mediaUrls,
     }
 
     onSubmit(newIssue)
 
-    // Reset form
     setFormData({
       description: "",
       requesterName: "",
@@ -77,11 +95,24 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
       sourceSystem: "",
       impactedArea: "",
     })
+    setMediaUrls([])
     setShowDuplicateWarning(false)
   }
 
+  const confirmCancel = () => {
+    if (mediaUrls.length > 0 || uploading) {
+      const confirm = window.confirm("You have uploaded media. Are you sure you want to cancel?")
+      if (!confirm) return
+    }
+    onClose()
+  }
+
+  const handleRemoveMedia = (idx: number) => {
+    setMediaUrls((prev) => prev.filter((_, i) => i !== idx))
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={confirmCancel}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-red-700">Report an Issue</DialogTitle>
@@ -160,12 +191,55 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
             </div>
           </div>
 
+          <div>
+            <Label className="font-semibold">Upload Media</Label>
+            <UploadButton<OurFileRouter>
+              endpoint="imageUploader"
+              onUploadBegin={() => setUploading(true)}
+              onClientUploadComplete={(res) => {
+                const urls = res.map(f => f.url)
+                setMediaUrls(prev => [...prev, ...urls])
+                setUploading(false)
+              }}
+              onUploadError={(err) => {
+                console.error("Upload error", err)
+                setUploading(false)
+              }}
+              appearance={{
+                container: "mt-2 !w-full !flex !flex-start", // force full width + left-align
+                button:
+                  "!px-4 !py-2 !border !border-red-600 !text-red-600 !bg-white !hover:bg-red-50 !rounded !text-sm !shadow-none !font-medium",
+              }}
+            />
+
+
+
+            {mediaUrls.length > 0 && (
+              <div className="mt-2 space-y-1 text-sm">
+                {mediaUrls.map((url, idx) => (
+                  <div key={idx} className="flex justify-between items-center">
+                    <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                      {url.split("/").pop()}
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveMedia(idx)}
+                      className="text-xs text-red-600 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={confirmCancel}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-red-600 hover:bg-red-700">
-              Create Issue
+            <Button type="submit" className="bg-red-600 hover:bg-red-700" disabled={uploading}>
+              {uploading ? "Uploading..." : "Create Issue"}
             </Button>
           </div>
         </form>

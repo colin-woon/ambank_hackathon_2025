@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { AlertCircle, Bot, Calendar, CheckCircle, Clock, Cpu, GitBranch, GitBranchIcon, GitCommit, GitCommitHorizontalIcon, GitMerge, GitPullRequest, GitPullRequestArrowIcon, HardDrive, HelpCircle, Target, XCircle } from "lucide-react"
 import { getWorkingDaysBetween, getAgingBucket } from "@/lib/utils"
+import { UploadButton } from "../lib/uploadthing"
 
 interface IssueModalProps {
   issue: Issue | null
@@ -236,6 +237,72 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
             <Section title="System Enhancement / Process Improvement Notes">
                 <Textarea value={editedIssue.systemEnhancementNotes || ""} onChange={(e) => handleChange("systemEnhancementNotes", e.target.value)} rows={4} />
             </Section>
+
+            <Section title="Media Attachments 📎">
+              <div className="space-y-4">
+                <UploadButton
+                  endpoint="imageUploader"
+                  onClientUploadComplete={(res) => {
+                    const urls = res.map((f) => f.url)
+                    setEditedIssue((prev) =>
+                      prev ? { ...prev, mediaUrls: [...(prev.mediaUrls || []), ...urls] } : prev
+                    )
+                  }}
+                  onUploadError={(error) => {
+                    console.error("Upload error", error)
+                  }}
+                  appearance={{
+                    container: "!mt-2 !w-full !flex !justify-start",
+                    button:
+                      "!px-4 !py-2 !border !border-red-600 !text-red-600 !bg-white !hover:bg-red-50 !rounded !text-sm !shadow-none !font-medium",
+                  }}
+                />
+
+                {editedIssue.mediaUrls && editedIssue.mediaUrls.length > 0 && (
+                  <div className="space-y-4 mt-4">
+                    {editedIssue.mediaUrls.map((url, idx) => (
+                      <div key={idx} className="flex items-center space-x-4 border p-2 rounded">
+                        <div className="w-20 h-20 flex items-center justify-center bg-gray-100 border rounded text-xs text-gray-700">
+                          {url.match(/\.(jpe?g|png|gif|webp)$/i) ? (
+                            <img
+                              src={url}
+                              alt={`Attachment ${idx + 1}`}
+                              className="w-full h-full object-cover rounded"
+                            />
+                          ) : url.endsWith(".pdf") ? (
+                            "PDF"
+                          ) : (
+                            "FILE"
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm truncate">{url.split("/").pop()?.split("?")[0]}</div>
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 underline"
+                          >
+                            Open
+                          </a>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const updated = editedIssue.mediaUrls!.filter((_, i) => i !== idx)
+                            setEditedIssue({ ...editedIssue, mediaUrls: updated })
+                          }}
+                          className="text-xs text-red-600 hover:underline"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </Section>
+
+
           </div>
 
           {/* Right Column */}
