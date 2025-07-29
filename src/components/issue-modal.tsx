@@ -325,9 +325,26 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 <Textarea value={editedIssue.extraRemarks || ""} onChange={(e) => handleChange("extraRemarks", e.target.value)} rows={4} />
             </Section>
 
-            <Section title="System Enhancement / Process Improvement Notes">
-                <Textarea value={editedIssue.systemEnhancementNotes || ""} onChange={(e) => handleChange("systemEnhancementNotes", e.target.value)} rows={4} />
-            </Section>
+            {editedIssue.systemEnhancement === "yes" && (
+              <Section title="System Enhancement Notes">
+                <Textarea
+                  value={editedIssue.systemEnhancementNotes || ""}
+                  onChange={(e) => handleChange("systemEnhancementNotes", e.target.value)}
+                  rows={4}
+                />
+              </Section>
+            )}
+
+            {editedIssue.processImprovement === "yes" && (
+              <Section title="Process Improvement Notes">
+                <Textarea
+                  value={editedIssue.processImprovementNotes || ""}
+                  onChange={(e) => handleChange("processImprovementNotes", e.target.value)}
+                  rows={4}
+                />
+              </Section>
+            )}
+
             <Section title="Add Media">
               <div>
                 <Label className="font-semibold">Add Media</Label>
