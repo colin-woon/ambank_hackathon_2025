@@ -18,13 +18,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 
 export const description = "An interactive pie chart"
 
@@ -47,7 +40,7 @@ export function ChartPieInteractive({
   dataKey,
   nameKey,
   id,
-  unitLabel = "Total"
+  unitLabel = "Total",
 }: ChartPieInteractiveProps) {
   const [activeItem, setActiveItem] = React.useState(data[0][nameKey])
 
@@ -55,57 +48,21 @@ export function ChartPieInteractive({
     () => data.findIndex((item) => item[nameKey] === activeItem),
     [activeItem, data, nameKey]
   )
-  const allItems = React.useMemo(() => data.map((item) => item[nameKey]), [data, nameKey])
 
   return (
     <Card data-chart={id} className="flex flex-col h-full">
       <ChartStyle id={id} config={chartConfig} />
-      <CardHeader className="flex-row items-start space-y-0 pb-0">
+      <CardHeader className="items-start pb-0">
         <div className="grid gap-1">
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </div>
-        <Select value={activeItem} onValueChange={setActiveItem}>
-          <SelectTrigger
-            className="ml-auto h-7 w-[130px] rounded-lg pl-2.5"
-            aria-label="Select a value"
-          >
-            <SelectValue placeholder="Select item" />
-          </SelectTrigger>
-          <SelectContent align="end" className="rounded-xl">
-            {allItems.map((key) => {
-              const config = chartConfig[key as keyof typeof chartConfig]
-
-              if (!config) {
-                return null
-              }
-
-              return (
-                <SelectItem
-                  key={key}
-                  value={key}
-                  className="rounded-lg [&_span]:flex"
-                >
-                  <div className="flex items-center gap-2 text-xs">
-                    <span
-                      className="flex h-3 w-3 shrink-0 rounded-xs"
-                      style={{
-                        backgroundColor: config.color,
-                      }}
-                    />
-                    {config?.label}
-                  </div>
-                </SelectItem>
-              )
-            })}
-          </SelectContent>
-        </Select>
       </CardHeader>
-      <CardContent className="flex flex-1 justify-center pb-0">
+      <CardContent className="flex flex-1 items-center justify-center pb-0">
         <ChartContainer
           id={id}
           config={chartConfig}
-          className="mx-auto aspect-square w-full max-w-[300px]"
+          className="mx-auto aspect-square w-full"
         >
           <PieChart>
             <ChartTooltip
@@ -132,6 +89,11 @@ export function ChartPieInteractive({
                   />
                 </g>
               )}
+              onMouseOver={(data) => {
+                if (data.name !== activeItem) {
+                  setActiveItem(data.name)
+                }
+              }}
             >
               <Label
                 content={({ viewBox }) => {

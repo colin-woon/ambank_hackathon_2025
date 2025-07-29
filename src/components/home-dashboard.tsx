@@ -103,9 +103,9 @@ const Top5Table = ({ title }: { title: string }) => (
 
 export function HomeDashboard({ issues }: HomeDashboardProps) {
   return (
-    <div className="grid grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
       {/* Left Column */}
-      <div className="lg:col-span-1 space-y-8">
+      <div className="lg:col-span-2 grid grid-row-2 gap-10 space-y-10">
         <ChartPieInteractive
           id="issue-categories"
           data={pieChartData}
@@ -133,7 +133,7 @@ export function HomeDashboard({ issues }: HomeDashboardProps) {
       </div>
 
       {/* Right Column */}
-      <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
         <Top5Table title="Top 5 Data Fields with Issues" />
         <Top5Table title="Top 5 Source Systems" />
         <Top5Table title="Top 5 Data Owners" />
