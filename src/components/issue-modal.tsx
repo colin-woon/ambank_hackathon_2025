@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { AlertCircle, Bot, Calendar, CheckCircle, Clock, Cpu, GitBranch, GitBranchIcon, GitCommit, GitCommitHorizontalIcon, GitMerge, GitPullRequest, GitPullRequestArrowIcon, HardDrive, HelpCircle, Target, XCircle } from "lucide-react"
 import { getWorkingDaysBetween, getAgingBucket } from "@/lib/utils"
-
+import { Slider } from "@/components/ui/slider"
 import DetectDuplicateButton from '@/components/duplicate-detection-button';
 import ResultsModal from '@/components/duplicate-result-modal';
 import { DuplicateDetectionResponse } from '@/types/duplicate-detection';
@@ -529,39 +529,28 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   <Progress value={percentCleansedValue} className="h-3 [&>*]:bg-green-500" />
                 </div>
             </Section>
-          </div>
+
             <Section title="Enhancement & Improvement Scores">
               <Field label="System Enhancement Score">
                 <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min={0}
-                    max={10}
+                  <Slider
+                    value={[editedIssue.systemEnhancementScore ?? 0]}
+                    onValueChange={([val]) => handleChange("systemEnhancementScore", val)}
+                    max={100}
                     step={1}
-                    value={editedIssue.systemEnhancementScore || 0}
-                    onChange={(e) =>
-                      handleChange("systemEnhancementScore", parseInt(e.target.value))
-                    }
-                    className="w-full"
                   />
                   <span className="w-10 text-right text-sm text-gray-700">
                     {editedIssue.systemEnhancementScore ?? 0}
                   </span>
                 </div>
               </Field>
-
               <Field label="Process Improvement Score">
                 <div className="flex items-center gap-4">
-                  <input
-                    type="range"
-                    min={0}
-                    max={10}
+                  <Slider
+                    value={[editedIssue.processImprovementScore ?? 0]}
+                    onValueChange={([val]) => handleChange("processImprovementScore", val)}
+                    max={100}
                     step={1}
-                    value={editedIssue.processImprovementScore || 0}
-                    onChange={(e) =>
-                      handleChange("processImprovementScore", parseInt(e.target.value))
-                    }
-                    className="w-full"
                   />
                   <span className="w-10 text-right text-sm text-gray-700">
                     {editedIssue.processImprovementScore ?? 0}
@@ -570,7 +559,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
               </Field>
             </Section>
 
-
+          </div>
         </div>
         <DialogFooter>
           <DialogClose asChild>
