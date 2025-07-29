@@ -14,13 +14,8 @@ interface ResolutionDashboardProps {
 
 export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: ResolutionDashboardProps) {
   // Filter issues for resolution stage based on resolution category
-  const cleansingIssues = issues.filter(
-    (issue) => issue.status === "cleansing"
-  )
-
-  const enhancingIssues = issues.filter(
-    (issue) =>
-      issue.status === "enhancing"
+  const resolvingIssues = issues.filter(
+    (issue) => issue.status === "resolving"
   )
 
   const monitoringIssues = issues.filter((issue) => issue.status === "monitoring")
@@ -162,41 +157,24 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
 
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Cleansing Column */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Resolving Column */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center">
             <Wrench className="w-5 h-5 mr-2 text-green-600" />
-            Cleansing ({cleansingIssues.length})
+            Resolving ({resolvingIssues.length})
           </h2>
         </div>
         <div className="bg-green-50 rounded-lg p-4 min-h-96 border-2 border-green-200">
-          <div className="mb-4 text-sm text-green-700 font-medium">Manual data cleansing and correction activities</div>
-          {cleansingIssues.map((issue) => (
+          <div className="mb-4 text-sm text-green-700 font-medium">
+            Data cleansing, system enhancing, or process improvement actions
+          </div>
+          {resolvingIssues.map((issue) => (
             <IssueCard key={issue.id} issue={issue} showMoveButton={true} />
           ))}
-          {cleansingIssues.length === 0 && (
-            <div className="text-center text-gray-500 py-8">No cleansing activities</div>
-          )}
-        </div>
-      </div>
-
-      {/* Enhancing Column */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-            <Zap className="w-5 h-5 mr-2 text-yellow-600" />
-            Enhancing ({enhancingIssues.length})
-          </h2>
-        </div>
-        <div className="bg-yellow-50 rounded-lg p-4 min-h-96 border-2 border-yellow-200">
-          <div className="mb-4 text-sm text-yellow-700 font-medium">Software Improvements and process improvements</div>
-          {enhancingIssues.map((issue) => (
-            <IssueCard key={issue.id} issue={issue} showMoveButton={true} />
-          ))}
-          {enhancingIssues.length === 0 && (
-            <div className="text-center text-gray-500 py-8">No enhancement activities</div>
+          {resolvingIssues.length === 0 && (
+            <div className="text-center text-gray-500 py-8">No resolving activities</div>
           )}
         </div>
       </div>

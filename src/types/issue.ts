@@ -19,7 +19,7 @@ export interface Issue {
   suggestedResolution?: string
 
   // Status & Assignment
-  status: "new" | "monitoring" | "closed" | "rejected" | "cleansing" | "investigating" | "enhancing" | "resolved"
+  status: "new" | "monitoring" | "closed" | "rejected" | "resolving" | "investigating" | "resolved"
   createdByUid: string
   dqPicUid?: string
   dsPicUid?: string
