@@ -90,10 +90,10 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-4">
-                <img 
-                  src="/amdash.png" 
-                  alt="AmDash Logo" 
-                  width={200} 
+                <img
+                  src="/amdash.png"
+                  alt="AmDash Logo"
+                  width={200}
                   height={200}
                   className="rounded-lg -mb-3 -mt-3"
                 />
