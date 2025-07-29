@@ -218,46 +218,50 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
           {/* Left Column */}
           <div className="col-span-2 space-y-4">
             <Section title="Core Details">
-              <div className="grid grid-cols-3 gap-2">
-                <Field label="Status">
-                  <Select value={editedIssue.status} onValueChange={(v) => handleChange("status", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="investigating">Investigating</SelectItem>
-                      <SelectItem value="resolving">Resolving</SelectItem>
-                      <SelectItem value="monitoring">Monitoring</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
-                      <SelectItem value="resolved">Resolved</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
+              <div className="grid grid-cols-2 gap-2">
 
-                <div className="flex items-center gap-6 mt-2">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="systemEnhancement"
-                      checked={editedIssue.systemEnhancement === "yes"}
-                      onChange={(e) =>
-                        handleChange("systemEnhancement", e.target.checked ? "yes" : "no")
-                      }
-                      className="accent-red-600"
-                    />
-                    <Label htmlFor="systemEnhancement">System Enhancement</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="processImprovement"
-                      checked={editedIssue.processImprovement === "yes"}
-                      onChange={(e) =>
-                        handleChange("processImprovement", e.target.checked ? "yes" : "no")
-                      }
-                      className="accent-red-600"
-                    />
-                    <Label htmlFor="processImprovement">Process Improvement</Label>
-                  </div>
+                <div className="grid grid-cols-2 gap-0">
+                  <Field label="Status">
+                    <Select value={editedIssue.status} onValueChange={(v) => handleChange("status", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="investigating">Investigating</SelectItem>
+                        <SelectItem value="resolving">Resolving</SelectItem>
+                        <SelectItem value="monitoring">Monitoring</SelectItem>
+                        <SelectItem value="closed">Closed</SelectItem>
+                        {/* <SelectItem value="resolved">Resolved</SelectItem> */}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  {editedIssue.status === "resolving" && (
+                    <div className="flex items-center gap-6 mt-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="systemEnhancement"
+                          checked={editedIssue.systemEnhancement === "yes"}
+                          onChange={(e) =>
+                            handleChange("systemEnhancement", e.target.checked ? "yes" : "no")
+                          }
+                          className="accent-red-600"
+                        />
+                        <Label htmlFor="systemEnhancement">System Enhancement</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="processImprovement"
+                          checked={editedIssue.processImprovement === "yes"}
+                          onChange={(e) =>
+                            handleChange("processImprovement", e.target.checked ? "yes" : "no")
+                          }
+                          className="accent-red-600"
+                        />
+                        <Label htmlFor="processImprovement">Process Improvement</Label>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-end items-end gap-3">
@@ -273,14 +277,14 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                       </SelectContent>
                     </Select>
                   </Field>
-                <Field label="Recurring">
-                  <Select value={editedIssue.isRecurring || "No"} onValueChange={(v) => handleChange("isRecurring", v)}>                    <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
+                  <Field label="Recurring">
+                    <Select value={editedIssue.isRecurring || "No"} onValueChange={(v) => handleChange("isRecurring", v)}>                    <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
                 </div>
               </div>
               <Field label="Description">
@@ -329,9 +333,26 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 <Textarea value={editedIssue.extraRemarks || ""} onChange={(e) => handleChange("extraRemarks", e.target.value)} rows={4} />
             </Section>
 
-            <Section title="System Enhancement / Process Improvement Notes">
-                <Textarea value={editedIssue.systemEnhancementNotes || ""} onChange={(e) => handleChange("systemEnhancementNotes", e.target.value)} rows={4} />
-            </Section>
+            {editedIssue.status === "resolving" && editedIssue.systemEnhancement === "yes" && (
+              <Section title="System Enhancement Notes">
+                <Textarea
+                  value={editedIssue.systemEnhancementNotes || ""}
+                  onChange={(e) => handleChange("systemEnhancementNotes", e.target.value)}
+                  rows={4}
+                />
+              </Section>
+            )}
+
+            {editedIssue.status === "resolving" && editedIssue.processImprovement === "yes" && (
+              <Section title="Process Improvement Notes">
+                <Textarea
+                  value={editedIssue.processImprovementNotes || ""}
+                  onChange={(e) => handleChange("processImprovementNotes", e.target.value)}
+                  rows={4}
+                />
+              </Section>
+            )}
+
             <Section title="Add Media">
               <div>
                 <Label className="font-semibold">Add Media</Label>
