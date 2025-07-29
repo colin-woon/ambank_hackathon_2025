@@ -42,7 +42,7 @@ export interface Issue {
   criticalDataElement?: "Yes" | "No"
   dqIssueCategory?: string
   issueField?: string
-  isRecurring?: boolean
+  isRecurring?: string
 
   // RCA & Impact
   rcaCategory?: string
@@ -56,6 +56,9 @@ export interface Issue {
   excludedRecordTotal?: number
   outstandingRecordTotal?: number // Should be derived (reported - cleansed - excluded)
   percentTotal?: string            // e.g. "25%"
+
+  systemEnhancement?: "yes" | "no"
+  processImprovement?: "yes" | "no"
 
   // Notes & Remarks
   extraRemarks?: string
