@@ -87,7 +87,8 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
   status: "new",
   createdByUid: "current-user",
   createdAt: new Date(),
-  deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+  deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now,
+  mediaUrls,
 
   // optional timestamp fields
   pickedUpAt: undefined,
@@ -100,16 +101,6 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
   agingMonths: undefined,
   agingBucket: undefined,
 }
-    const newIssue: Omit<Issue, "id" | "createdAt"> = {
-      ...formData,
-      status: "new",
-      createdByUid: "current-user",
-      dqPicUid: "",
-      itPicUid: "",
-      assignedAt: now,
-      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      mediaUrls,
-    }
 
     onSubmit(newIssue)
 
