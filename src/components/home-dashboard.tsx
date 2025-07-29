@@ -56,12 +56,6 @@ const top5MockData = [
   { rank: 5, name: "CIF Number", count: 55 },
 ]
 
-const followUpData = [
-  { id: "SR20250729001", assignee: "John Doe" },
-  { id: "SR20250729002", assignee: "Jane Smith" },
-  { id: "SR20250729003", assignee: "Peter Jones" },
-]
-
 const Top5Table = ({ title }: { title: string }) => (
   <Card>
     <CardHeader className="p-4">
@@ -144,7 +138,7 @@ export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
   const urgentFollowUps = issues
     .filter(issue => issue.status !== 'closed' && issue.deadline && issue.deadline > now && issue.dsPicUid)
     .sort((a, b) => a.deadline.getTime() - b.deadline.getTime())
-    .slice(0, 3);
+    .slice(0, 5);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
