@@ -1,5 +1,6 @@
 "use client"
-
+import { doc, updateDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 import { useState, useEffect, useMemo } from "react"
 import type { Issue } from "@/types/issue"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog"
@@ -139,15 +140,31 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
 
 
   const handleSaveChanges = async () => {
-    if (!editedIssue) return
+    if (!editedIssue) return;
 
-    const updatedIssue = {
-      ...editedIssue,
+    const updatedAt = new Date();
+
+    try {
+      const issueRef = doc(db, "issues", editedIssue.id);
+      await updateDoc(issueRef, {
+        ...editedIssue,
+        updatedAt,
+      });
+
+      const updatedIssue = {
+        ...editedIssue,
+        updatedAt,
+      };
+
+      onUpdate(updatedIssue); // Pass the updated object with updatedAt
+      onClose();
+    } catch (error) {
+      console.error("Error saving issue:", error);
+      alert("Failed to save changes. Please try again.");
     }
-
-    onUpdate(updatedIssue)
-    onClose()
   }
+
+
 
 
   const { outstanding, percentCleansed, percentCleansedValue } = useMemo(() => {
@@ -575,6 +592,16 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   <HelpCircle className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">Aging Bucket:</span>
                   <span>{agingBucket ?? "N/A"}</span>
+                </div>
+
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <HelpCircle className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Updated At:</span>
+                  <span>
+                    {editedIssue.updatedAt
+                      ? new Date(editedIssue.updatedAt).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </span>
                 </div>
               </div>
             </Section>
