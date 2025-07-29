@@ -42,12 +42,34 @@ export function ChartPieInteractive({
   id,
   unitLabel = "Total",
 }: ChartPieInteractiveProps) {
-  const [activeItem, setActiveItem] = React.useState(data[0][nameKey])
+  const [activeItem, setActiveItem] = React.useState(data[0]?.[nameKey])
+
+  React.useEffect(() => {
+    if (data.length > 0 && activeItem === undefined) {
+      setActiveItem(data[0][nameKey])
+    }
+  }, [data, activeItem, nameKey])
 
   const activeIndex = React.useMemo(
     () => data.findIndex((item) => item[nameKey] === activeItem),
     [activeItem, data, nameKey]
   )
+
+  if (data.length === 0) {
+    return (
+      <Card data-chart={id} className="flex flex-col h-full">
+        <CardHeader className="items-start pb-0">
+          <div className="grid gap-1">
+            <CardTitle>{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="flex flex-1 items-center justify-center pb-0">
+          <div className="text-muted-foreground">No data to display</div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card data-chart={id} className="flex flex-col h-full">
