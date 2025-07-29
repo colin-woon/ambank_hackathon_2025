@@ -110,7 +110,7 @@ export function AnalysisDashboard({ issues, onIssueClick, onUpdateIssue }: Analy
           <p className="text-sm text-gray-700 mb-2 line-clamp-1">{issue.description}</p>
           <div className="flex justify-between text-xs text-gray-500">
             <span>{issue.requesterName}</span>
-            <span>{issue.createdAt.toLocaleDateString()}</span>
+            <span>{issue.createdAt.toLocaleDateString("en-GB")}</span>
           </div>
         </CardContent>
       </Card>

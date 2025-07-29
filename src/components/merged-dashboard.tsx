@@ -159,7 +159,7 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
         <p className="text-sm text-gray-700 mb-2 line-clamp-2">{issue.description}</p>
         <div className="flex justify-between text-xs text-gray-500 mb-2">
           <span>{issue.dsPicUid ?? issue.dqPicUid}</span>
-          <span>{issue.updatedAt?.toLocaleDateString?.() ?? "N/A"}</span>
+          <span>{issue.updatedAt?.toLocaleDateString("en-GB") ?? "N/A"}</span>
         </div>
 
         {(issue.status === "resolving" || issue.status === "monitoring") && issue.impactedRecordTotal && (
