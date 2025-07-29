@@ -183,7 +183,24 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
               <span className="text-gray-700 font-medium">{editedIssue.description}</span>
             </div>
             <div className="flex items-center gap-4">
-              <Badge variant={editedIssue.priority === "High" ? "destructive" : "secondary"}>{editedIssue.priority}</Badge>
+              <span
+                className={`text-xs font-semibold px-3 py-1 rounded-full text-white transition-colors duration-500
+                  ${
+                    editedIssue.priority === "Super High"
+                      ? "bg-red-600 hover:bg-red-700"
+                      : editedIssue.priority === "High"
+                      ? "bg-orange-500 hover:bg-orange-600"
+                      : editedIssue.priority === "Medium"
+                      ? "bg-yellow-500 hover:bg-yellow-600 text-black"
+                      : editedIssue.priority === "Low"
+                      ? "bg-green-500 hover:bg-green-600"
+                      : "bg-gray-400 hover:bg-gray-500"
+                  }
+                `}
+              >
+                {editedIssue.priority}
+              </span>
+
               <Badge variant="outline" className="border-blue-400 text-blue-600">{editedIssue.status.toUpperCase()}</Badge>
               <div className="text-sm text-gray-500 flex items-center gap-2">
                 <Target className="w-4 h-4" />
@@ -240,6 +257,18 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 </div>
 
                 <div className="flex justify-end items-end gap-3">
+                  <Field label="Priority">
+                    <Select value={editedIssue.priority || "N/A"} onValueChange={(v) => handleChange("priority", v)}>
+                      <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Super High">Super High</SelectItem>
+                        <SelectItem value="High">High</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="Low">Low</SelectItem>
+                        <SelectItem value="N/A">N/A</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
                 <Field label="Recurring">
                   <Select value={editedIssue.isRecurring || "No"} onValueChange={(v) => handleChange("isRecurring", v)}>                    <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
                     <SelectContent>

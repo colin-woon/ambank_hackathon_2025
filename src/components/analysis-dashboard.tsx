@@ -19,11 +19,15 @@ export function AnalysisDashboard({ issues, onIssueClick, onUpdateIssue }: Analy
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "High":
+      case "Super High":
         return "border-l-red-500 bg-red-50"
-      case "Medium":
+      case "High":
         return "border-l-orange-500 bg-orange-50"
+      case "Medium":
+        return "border-l-yellow-500 bg-yellow-50"
       case "Low":
+        return "border-l-gray-500 bg-gray-50"
+      case "N/A":
         return "border-l-gray-500 bg-gray-50"
       default:
         return "border-l-gray-500 bg-gray-50"
