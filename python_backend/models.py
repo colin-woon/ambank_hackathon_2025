@@ -23,3 +23,22 @@ class HealthResponse(BaseModel):
 
 # class AddIssueResponse(BaseModel):
 #     message: str
+
+class PriorityScoreRequest(BaseModel):
+    description: str
+    impacted_report_area: str
+    is_critical_cde: bool
+    dq_issue_category: str
+    problem_category: str
+    impacted_field: str
+    rca_category: str
+    rca_details: str
+    resolution_category: str
+    impacted_record_total: int
+
+class PriorityScoreResponse(BaseModel):
+    impact_score: int
+    complexity_score: int
+    total_score: int
+    sla: str
+    priority: str

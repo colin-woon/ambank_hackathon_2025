@@ -123,31 +123,31 @@ class DuplicateDetector:
             logger.error(f"Error in duplicate detection: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Error in duplicate detection: {str(e)}")
 
-    def add_issue(self, issue_id: str, issue_description: str) -> str:
-        """Add a new issue to the knowledge base"""
-        try:
-            # Generate embedding for the new issue
-            embedding_response = self.client.models.embed_content(
-                model=self.EMBEDDING_MODEL,
-                contents=[issue_description],
-                config=types.EmbedContentConfig(task_type="SEMANTIC_SIMILARITY")
-            )
-            embedding = embedding_response.embeddings[0].values
+    # def add_issue(self, issue_id: str, issue_description: str) -> str:
+    #     """Add a new issue to the knowledge base"""
+    #     try:
+    #         # Generate embedding for the new issue
+    #         embedding_response = self.client.models.embed_content(
+    #             model=self.EMBEDDING_MODEL,
+    #             contents=[issue_description],
+    #             config=types.EmbedContentConfig(task_type="SEMANTIC_SIMILARITY")
+    #         )
+    #         embedding = embedding_response.embeddings[0].values
 
-            # Add to ChromaDB
-            self.collection.add(
-                embeddings=[embedding],
-                documents=[issue_description],
-                metadatas=[{"ticket_id": issue_id}],
-                ids=[issue_id]
-            )
+    #         # Add to ChromaDB
+    #         self.collection.add(
+    #             embeddings=[embedding],
+    #             documents=[issue_description],
+    #             metadatas=[{"ticket_id": issue_id}],
+    #             ids=[issue_id]
+    #         )
 
-            logger.info(f"Added new issue to knowledge base: {issue_id}")
-            return f"Issue {issue_id} added to knowledge base successfully"
+    #         logger.info(f"Added new issue to knowledge base: {issue_id}")
+    #         return f"Issue {issue_id} added to knowledge base successfully"
 
-        except Exception as e:
-            logger.error(f"Error adding issue to knowledge base: {str(e)}")
-            raise HTTPException(status_code=500, detail=str(e))
+    #     except Exception as e:
+    #         logger.error(f"Error adding issue to knowledge base: {str(e)}")
+    #         raise HTTPException(status_code=500, detail=str(e))
 
     def get_collection_count(self) -> int:
         """Get the number of embeddings in the collection"""
