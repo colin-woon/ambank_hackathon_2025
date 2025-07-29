@@ -13,6 +13,7 @@ import { ResolutionDashboard } from "@/components/resolution-dashboard"
 import { mockIssues } from "@/lib/mock-data"
 import { firestore } from "@/lib/firebase"
 import { collection, getDocs, Timestamp } from "firebase/firestore"
+import { HomeDashboard } from "@/components/home-dashboard"
 
 export default function HomePage() {
   const [issues, setIssues] = useState<Issue[]>([])
@@ -90,11 +91,15 @@ export default function HomePage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="table" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+        <Tabs defaultValue="Home" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
+            <TabsTrigger value="Home" className="flex items-center space-x-2">
+              <Users className="w-4 h-4" />
+              <span>Home</span>
+            </TabsTrigger>
             <TabsTrigger value="table" className="flex items-center space-x-2">
               <Users className="w-4 h-4" />
-              <span>Overview</span>
+              <span>All Issues</span>
             </TabsTrigger>
             <TabsTrigger value="analysis" className="flex items-center space-x-2">
               <Search className="w-4 h-4" />
@@ -105,6 +110,11 @@ export default function HomePage() {
               <span>Resolution Dashboard</span>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="Home">
+            <HomeDashboard issues={issues}/>
+          </TabsContent>
+          {/* onIssueClick={handleIssueClick}  */}
 
           <TabsContent value="table">
             <IssueTable issues={issues} onIssueClick={handleIssueClick} />
