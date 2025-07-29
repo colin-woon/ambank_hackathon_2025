@@ -75,7 +75,7 @@ export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
       <div className="lg:col-span-2 space-y-8">
         <Card>
             <CardHeader>
-                <CardTitle>Near Deadline Follow-ups</CardTitle>
+                <CardTitle className="lg:text-4xl">Near Deadline Follow-ups</CardTitle>
             </CardHeader>
             <CardContent className="flex justify-around items-center pt-4">
                 {urgentFollowUps.map((item) => (

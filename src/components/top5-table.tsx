@@ -58,7 +58,7 @@ export const Top5Table = ({ issues, onIssueClick, sortKey: initialSortKey }: Top
   return (
     <Card>
       <CardHeader className="p-4">
-        <CardTitle className="text-base">{sortKeyLabels[sortKey]}</CardTitle>
+        <CardTitle className="lg:text-2xl">{sortKeyLabels[sortKey]}</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
