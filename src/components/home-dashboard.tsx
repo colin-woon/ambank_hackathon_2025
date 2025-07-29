@@ -195,7 +195,7 @@ export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
               </div>
             </CardHeader>
             <CardContent className="pt-2">
-              <ImpactEffortBubble issues={issues} />
+              <ImpactEffortBubble issues={issues} onIssueClick={onIssueClick} />
             </CardContent>
           </Card>
         </div>
