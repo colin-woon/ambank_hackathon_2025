@@ -19,7 +19,13 @@ export interface Issue {
   suggestedResolution?: string
 
   // Status & Assignment
-  status: "new" | "monitoring" | "closed" | "rejected" | "resolving" | "investigating" | "resolved"
+  // Status Dictinary:
+  // New: new MS form submission
+  // Investigating: ticket pickup
+  // Resolving: in progress of resolving (cleansing, system enhancement, process improvement)
+  // Monitoring: after resolving, monitor 3 months
+  // Closed: after monitoring period
+  status: "new" | "monitoring" | "closed" | "resolving" | "investigating"
   createdByUid: string
   dqPicUid?: string
   dsPicUid?: string
@@ -69,7 +75,7 @@ export interface Issue {
     impactScore: number
     complexityScore: number
     totalScore: number
-    suggestedPriority: "High" | "Medium" | "Low"
+    suggestedPriority: "Super High" | "High" | "Medium" | "Low"
   }
 
   // Working days calculation (based on totalScore)
