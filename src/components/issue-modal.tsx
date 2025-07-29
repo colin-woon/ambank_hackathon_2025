@@ -184,7 +184,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
           <DialogTitle className="flex items-center justify-between pr-6">
             <div className="flex items-center gap-3 text-xl">
               <span className="text-red-600">{editedIssue.id}</span>
-              <span className="text-gray-700 font-medium">{editedIssue.description}</span>
+              <span className="text-gray-700 font-medium line-clamp-1">{editedIssue.description}</span>
             </div>
             <div className="flex items-center gap-4">
               <span
