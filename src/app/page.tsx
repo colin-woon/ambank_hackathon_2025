@@ -143,6 +143,8 @@ export default function HomePage() {
               />
             </div>
           </TabsContent>
+            </>
+          )}
         </main>
       </Tabs>
 
