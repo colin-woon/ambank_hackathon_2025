@@ -102,18 +102,55 @@ const Top5Table = ({ title }: { title: string }) => (
 )
 
 export function HomeDashboard({ issues }: HomeDashboardProps) {
+  const statusCounts = issues.reduce((acc, issue) => {
+    acc[issue.status] = (acc[issue.status] || 0) + 1
+    return acc
+  }, {} as Record<Issue["status"], number>)
+
+  const statusChartData = Object.entries(statusCounts).map(([status, total], index) => ({
+    status,
+    total,
+    fill: `var(--chart-${index + 1})`,
+  }))
+
+  const statusChartConfig = {
+    total: {
+      label: "Total",
+    },
+    new: {
+      label: "New",
+      color: "hsl(var(--chart-1))",
+    },
+    investigating: {
+      label: "Investigating",
+      color: "hsl(var(--chart-2))",
+    },
+    resolving: {
+      label: "Resolving",
+      color: "hsl(var(--chart-3))",
+    },
+    monitoring: {
+      label: "Monitoring",
+      color: "hsl(var(--chart-4))",
+    },
+    closed: {
+      label: "Closed",
+      color: "hsl(var(--chart-5))",
+    },
+  } satisfies ChartConfig
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
       {/* Left Column */}
       <div className="lg:col-span-2">
         <ChartPieInteractive
-          id="issue-categories"
-          data={pieChartData}
-          chartConfig={chartConfig}
-          title="Issue Distribution"
-          description="Breakdown of issues by category"
+          id="issue-status"
+          data={statusChartData}
+          chartConfig={statusChartConfig}
+          title="Issue Status Distribution"
+          description="Breakdown of issues by current status"
           dataKey="total"
-          nameKey="category"
+          nameKey="status"
           unitLabel="Issues"
         />
       </div>
