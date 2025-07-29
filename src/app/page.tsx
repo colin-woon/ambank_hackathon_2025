@@ -8,12 +8,11 @@ import { Home, Plus, Users, Kanban, Search } from "lucide-react"
 import { CreateIssueModal } from "@/components/create-issue-modal"
 import { IssueModal } from "@/components/issue-modal"
 import type { Issue } from "@/types/issue"
-import { AnalysisDashboard } from "@/components/analysis-dashboard"
-import { ResolutionDashboard } from "@/components/resolution-dashboard"
 import { mockIssues } from "@/lib/mock-data"
 import { firestore } from "@/lib/firebase"
 import { collection, getDocs, Timestamp } from "firebase/firestore"
 import { HomeDashboard } from "@/components/home-dashboard"
+import { MergedDashboard } from "@/components/merged-dashboard"
 
 export default function HomePage() {
   const [issues, setIssues] = useState<Issue[]>([])
@@ -80,7 +79,7 @@ export default function HomePage() {
     setIsIssueModalOpen(true)
   }
 
- return (
+  return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50">
       <Tabs defaultValue="Home" className="w-full">
         <header className="bg-white border-b border-red-200 shadow-sm sticky top-0 z-10">
@@ -100,17 +99,16 @@ export default function HomePage() {
                   <Users className="w-4 h-4" />
                   <span>All Issues</span>
                 </TabsTrigger>
-                <TabsTrigger value="analysis" className="flex items-center space-x-2">
-                  <Search className="w-4 h-4" />
-                  <span>Analysis Dashboard</span>
-                </TabsTrigger>
-                <TabsTrigger value="resolution" className="flex items-center space-x-2">
+                <TabsTrigger value="workflow" className="flex items-center space-x-2">
                   <Kanban className="w-4 h-4" />
-                  <span>Resolution Dashboard</span>
+                  <span>Workflow Board</span>
                 </TabsTrigger>
               </TabsList>
 
-              <Button onClick={() => setIsCreateModalOpen(true)} className="bg-red-600 hover:bg-red-700 text-white">
+              <Button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Create New Issue
               </Button>
@@ -130,25 +128,21 @@ export default function HomePage() {
               <HomeDashboard issues={issues} onIssueClick={handleIssueClick}/>
             </TabsContent>
 
-            <TabsContent value="table">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <IssueTable issues={issues} onIssueClick={handleIssueClick} />
-              </div>
-            </TabsContent>
+          <TabsContent value="table">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <IssueTable issues={issues} onIssueClick={handleIssueClick} />
+            </div>
+          </TabsContent>
 
-            <TabsContent value="analysis">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <AnalysisDashboard issues={issues} onIssueClick={handleIssueClick} onUpdateIssue={handleUpdateIssue} />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="resolution">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <ResolutionDashboard issues={issues} onIssueClick={handleIssueClick} onUpdateIssue={handleUpdateIssue} />
-              </div>
-            </TabsContent>
-            </>
-          )}
+          <TabsContent value="workflow">
+            <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+              <MergedDashboard
+                issues={issues}
+                onIssueClick={handleIssueClick}
+                onUpdateIssue={handleUpdateIssue}
+              />
+            </div>
+          </TabsContent>
         </main>
       </Tabs>
 

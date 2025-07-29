@@ -4,7 +4,18 @@ import type { Issue } from "@/types/issue"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle, XCircle, Wrench, Zap, Eye } from "lucide-react"
+import { CheckCircle, Wrench, Eye } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  useDraggable,
+  useDroppable,
+} from "@dnd-kit/core"
 
 interface ResolutionDashboardProps {
   issues: Issue[]
@@ -12,13 +23,49 @@ interface ResolutionDashboardProps {
   onUpdateIssue: (issue: Issue) => void
 }
 
-export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: ResolutionDashboardProps) {
-  // Filter issues for resolution stage based on resolution category
-  const resolvingIssues = issues.filter(
-    (issue) => issue.status === "resolving"
-  )
+function DraggableIssue({ issue, children }: { issue: Issue; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: issue.id,
+  })
 
-  const monitoringIssues = issues.filter((issue) => issue.status === "monitoring")
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: transform
+          ? `translate(${transform.x}px, ${transform.y}px)`
+          : undefined,
+      }}
+      {...listeners}
+      {...attributes}
+    >
+      {children}
+    </div>
+  )
+}
+
+function DroppableColumn({ id, children }: { id: string; children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id })
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`min-h-96 p-4 rounded-lg border-2 transition-colors space-y-2 ${
+        isOver ? "bg-purple-100 border-purple-400" : "bg-gray-50 border-gray-200"
+      }`}
+    >
+      {children}
+    </div>
+  )
+}
+
+export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: ResolutionDashboardProps) {
+  const sensors = useSensors(useSensor(PointerSensor))
+
+  const resolvingIssues = issues.filter((issue) => issue.status === "resolving")
+  const monitoringIssues = issues.filter((issue) =>
+    ["monitoring", "resolved", "closed"].includes(issue.status)
+  )
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -37,87 +84,80 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
     }
   }
 
-  const handleStatusChange = (issue: Issue, newStatus: Issue["status"]) => {
-    const updatedIssue: Issue = {
-      ...issue,
-      ...(newStatus !== "resolved" ? { status: newStatus } : {}),
-      resolvedAt: newStatus === "resolved" ? new Date() : issue.resolvedAt,
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const draggedIssue = issues.find((i) => i.id === active.id)
+    if (!draggedIssue) return
+
+    const newStatus = over.id as Issue["status"]
+    if (draggedIssue.status !== newStatus) {
+      const updatedIssue = { ...draggedIssue, status: newStatus }
+
+      // Auto-set timestamps when moved
+      if (newStatus === "monitoring") updatedIssue.completedAt = new Date()
+      if (newStatus === "resolved") updatedIssue.resolvedAt = new Date()
+
+      onUpdateIssue(updatedIssue)
     }
-    onUpdateIssue(updatedIssue)
   }
 
-
-  const handleMoveToMonitoring = (issue: Issue) => {
-    const now = new Date()
-    const updatedIssue: Issue = {
-      ...issue,
-      status: "monitoring",
-      completedAt: now, // ✅ Set completedAt when moving to monitoring
-    }
-    onUpdateIssue(updatedIssue)
-  }
-
-  const IssueCard = ({
-    issue,
-    showMoveButton = false,
-    showMonitoringActions = false,
-  }: {
-    issue: Issue
-    showMoveButton?: boolean
-    showMonitoringActions?: boolean
-  }) => (
-    <Card
-      className={`mb-3 cursor-pointer hover:shadow-md transition-shadow border-l-4 ${getPriorityColor(issue.priority)}`}
-      onClick={() => onIssueClick(issue)}
-    >
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-sm font-medium text-red-700">{issue.id}</CardTitle>
-          <Badge variant="outline" className="text-xs">
-            {issue.priority}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <p className="text-sm text-gray-700 mb-2 line-clamp-2">{issue.description}</p>
-        <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
-          <span>{issue.dsPicUid}</span>
-          <span>{issue.assignedAt.toLocaleDateString()}</span>
-        </div>
-
-        {/* Show cleansing progress for cleansing issues */}
-        {issue.impactedRecordTotal && (
-          <div className="mb-2">
-            <div className="text-xs text-gray-600 mb-1">
-              Progress: {Math.round(((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}%
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-green-600 h-2 rounded-full"
-                style={{
-                  width: `${Math.round(((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}%`,
-                }}
-              ></div>
-            </div>
+  const IssueCard = ({ issue }: { issue: Issue }) => (
+    <DraggableIssue issue={issue}>
+      <Card
+        className={`cursor-pointer hover:shadow-md transition-shadow border-l-4 ${getPriorityColor(issue.priority)}`}
+        onClick={() => onIssueClick(issue)}
+      >
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start">
+            <CardTitle className="text-sm font-medium text-red-700">{issue.id}</CardTitle>
+            <Badge variant="outline" className="text-xs">{issue.priority}</Badge>
           </div>
-        )}
+        </CardHeader>
+        <CardContent className="pt-0">
+          <p className="text-sm text-gray-700 mb-2 line-clamp-1">{issue.description}</p>
+          <div className="flex justify-between text-xs text-gray-500 mb-2">
+            <span>{issue.dsPicUid}</span>
+            <span>{issue.assignedAt?.toLocaleDateString?.() ?? "N/A"}</span>
+          </div>
 
-        {showMoveButton && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="w-full text-purple-700 border-purple-300 hover:bg-purple-50 bg-transparent"
-            onClick={(e) => {
-              e.stopPropagation()
-              handleMoveToMonitoring(issue)
-            }}
-          >
-            <Eye className="w-3 h-3 mr-1" />
-            Move to Monitoring
-          </Button>
-        )}
+          {issue.impactedRecordTotal && (
+            <div className="mb-2">
+              <div className="text-xs text-gray-600 mb-1">
+                Cleansing Progress: {Math.round(((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}%
+              </div>
+              <Progress
+                value={Math.min(100, ((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}
+                className="h-2 [&>*]:bg-green-600"
+              />
+            </div>
+          )}
 
-        {showMonitoringActions && (
+          {issue.systemEnhancement === "yes" && typeof issue.systemEnhancementScore === "number" && (
+            <div className="mb-2">
+              <div className="text-xs text-gray-600 mb-1">
+                System Enhancement Score: {issue.systemEnhancementScore}%
+              </div>
+              <Progress
+                value={Math.min(100, issue.systemEnhancementScore)}
+                className="h-2 [&>*]:bg-blue-500"
+              />
+            </div>
+          )}
+
+          {issue.processImprovement === "yes" && typeof issue.processImprovementScore === "number" && (
+            <div className="mb-2">
+              <div className="text-xs text-gray-600 mb-1">
+                Process Improvement Score: {issue.processImprovementScore}%
+              </div>
+              <Progress
+                value={Math.min(100, issue.processImprovementScore)}
+                className="h-2 [&>*]:bg-yellow-500"
+              />
+            </div>
+          )}
+
           <div className="flex gap-2 mt-2">
             <Button
               size="sm"
@@ -125,7 +165,7 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
               className="flex-1 text-green-700 border-green-300 hover:bg-green-50 bg-transparent"
               onClick={(e) => {
                 e.stopPropagation()
-                handleStatusChange(issue, "closed") // remove from monitoring
+                onUpdateIssue({ ...issue, status: "closed", completedAt: new Date() })
               }}
             >
               <CheckCircle className="w-3 h-3 mr-1" />
@@ -137,75 +177,45 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
               className="flex-1 text-blue-700 border-blue-300 hover:bg-blue-50 bg-transparent"
               onClick={(e) => {
                 e.stopPropagation()
-                handleStatusChange(issue, "resolved") // stays in monitoring
+                onUpdateIssue({ ...issue, status: "resolved", resolvedAt: new Date() })
               }}
             >
               <CheckCircle className="w-3 h-3 mr-1" />
               Resolve
             </Button>
           </div>
-        )}
-
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </DraggableIssue>
   )
 
-  const isMoreThan3MonthsOld = (date?: string | Date) => {
-    if (!date) return false
-    const completed = new Date(date)
-    const now = new Date()
-    const diffMonths = (now.getFullYear() - completed.getFullYear()) * 12 + (now.getMonth() - completed.getMonth())
-    return diffMonths >= 3
-  }
-
-
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Resolving Column */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Resolving Column */}
+        <div>
           <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-            <Wrench className="w-5 h-5 mr-2 text-green-600" />
-            Resolving ({resolvingIssues.length})
+            <Wrench className="w-5 h-5 mr-2 text-green-600" /> Resolving ({resolvingIssues.length})
           </h2>
+          <DroppableColumn id="resolving">
+            {resolvingIssues.map((issue) => (
+              <IssueCard key={issue.id} issue={issue} />
+            ))}
+          </DroppableColumn>
         </div>
-        <div className="bg-green-50 rounded-lg p-4 min-h-96 border-2 border-green-200">
-          <div className="mb-4 text-sm text-green-700 font-medium">
-            Data cleansing, system enhancing, or process improvement actions
-          </div>
-          {resolvingIssues.map((issue) => (
-            <IssueCard key={issue.id} issue={issue} showMoveButton={true} />
-          ))}
-          {resolvingIssues.length === 0 && (
-            <div className="text-center text-gray-500 py-8">No resolving activities</div>
-          )}
+
+        {/* Monitoring Column */}
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+            <Eye className="w-5 h-5 mr-2 text-purple-600" /> Monitoring ({monitoringIssues.length})
+          </h2>
+          <DroppableColumn id="monitoring">
+            {monitoringIssues.map((issue) => (
+              <IssueCard key={issue.id} issue={issue} />
+            ))}
+          </DroppableColumn>
         </div>
       </div>
-
-      {/* Monitoring Column */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-            <Eye className="w-5 h-5 mr-2 text-purple-600" />
-            Monitoring ({monitoringIssues.length})
-          </h2>
-        </div>
-        <div className="bg-purple-50 rounded-lg p-4 min-h-96 border-2 border-purple-200">
-          <div className="mb-4 text-sm text-purple-700 font-medium">Solutions under monitoring and validation</div>
-          {monitoringIssues.map((issue) => (
-            <IssueCard
-              key={issue.id}
-              issue={issue}
-              showMonitoringActions={isMoreThan3MonthsOld(issue.completedAt)}
-            />
-          ))}
-
-          {monitoringIssues.length === 0 && (
-            <div className="text-center text-gray-500 py-8">No issues being monitored</div>
-          )}
-        </div>
-      </div>
-    </div>
+    </DndContext>
   )
 }

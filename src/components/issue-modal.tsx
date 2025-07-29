@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { AlertCircle, Bot, Calendar, CheckCircle, Clock, Cpu, GitBranch, GitBranchIcon, GitCommit, GitCommitHorizontalIcon, GitMerge, GitPullRequest, GitPullRequestArrowIcon, HardDrive, HelpCircle, Target, XCircle } from "lucide-react"
 import { getWorkingDaysBetween, getAgingBucket } from "@/lib/utils"
-
+import { Slider } from "@/components/ui/slider"
 import DetectDuplicateButton from '@/components/duplicate-detection-button';
 import ResultsModal from '@/components/duplicate-result-modal';
 import { DuplicateDetectionResponse } from '@/types/duplicate-detection';
@@ -76,9 +76,12 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     const assigned = new Date(editedIssue.assignedAt);
 
     const days = getWorkingDaysBetween(assigned, now);
-    const months =
+    const months = Math.max(
+      0,
       (now.getFullYear() - assigned.getFullYear()) * 12 +
-      now.getMonth() - assigned.getMonth();
+      now.getMonth() - assigned.getMonth()
+    );
+
 
     setAgingDays(days);
     setAgingMonths(months);
@@ -109,34 +112,36 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
   }, [isOpen, issue])
 
   const handleChange = (field: keyof Issue, value: any) => {
-    if (editedIssue) {
-      setEditedIssue({ ...editedIssue, [field]: value })
+    if (!editedIssue) return
+    let updates: Partial<Issue> = { [field]: value }
+    if (field === "status") {
+      const now = new Date()
+
+      switch (value) {
+        case "investigating":
+          updates.pickedUpAt = editedIssue.pickedUpAt ?? now
+          break
+        case "resolving":
+          updates.assignedAt = editedIssue.assignedAt ?? now
+          break
+        case "resolved":
+          updates.resolvedAt = editedIssue.resolvedAt ?? now
+          break
+        case "monitoring":
+          updates.completedAt = editedIssue.completedAt ?? now
+          break
+      }
     }
+
+    setEditedIssue({ ...editedIssue, ...updates })
   }
 
-  const uploadFiles = async (files: File[]): Promise<string[]> => {
-    // Simulated upload – replace with real upload logic (Firebase, S3, etc.)
-    return Promise.all(
-      files.map((file) =>
-        new Promise((resolve) =>
-          setTimeout(() => resolve(URL.createObjectURL(file)), 500)
-        )
-      )
-    )
-  }
 
   const handleSaveChanges = async () => {
     if (!editedIssue) return
 
-    let uploadedUrls: string[] = []
-
-    if (mediaFiles.length > 0) {
-      uploadedUrls = await uploadFiles(mediaFiles) // 👈 implement this function
-    }
-
     const updatedIssue = {
       ...editedIssue,
-      mediaUrls: [...(editedIssue.mediaUrls || []), ...uploadedUrls],
     }
 
     onUpdate(updatedIssue)
@@ -157,7 +162,9 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     const excluded = editedIssue.excludedRecordTotal || 0
 
     const outstanding = impacted - cleansed - excluded
-    const percentCleansedValue = impacted > 0 ? ((impacted - outstanding) / impacted) * 100 : 0
+    const percentCleansedValue = impacted > 0
+      ? Math.min(100, ((impacted - outstanding) / impacted) * 100)
+      : 0
     const percentCleansed = percentCleansedValue.toFixed(0) + "%"
 
     return {
@@ -180,7 +187,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
           <DialogTitle className="flex items-center justify-between pr-6">
             <div className="flex items-center gap-3 text-xl">
               <span className="text-red-600">{editedIssue.id}</span>
-              <span className="text-gray-700 font-medium">{editedIssue.description}</span>
+              <span className="text-gray-700 font-medium line-clamp-1">{editedIssue.description}</span>
             </div>
             <div className="flex items-center gap-4">
               <span
@@ -214,46 +221,48 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
           {/* Left Column */}
           <div className="col-span-2 space-y-4">
             <Section title="Core Details">
-              <div className="grid grid-cols-3 gap-2">
-                <Field label="Status">
-                  <Select value={editedIssue.status} onValueChange={(v) => handleChange("status", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="investigating">Investigating</SelectItem>
-                      <SelectItem value="resolving">Cleansing</SelectItem>
-                      <SelectItem value="monitoring">Monitoring</SelectItem>
-                      <SelectItem value="closed">Closed</SelectItem>
-                      <SelectItem value="resolved">Resolved</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
+              <div className="grid grid-cols-2 gap-2">
 
-                <div className="flex items-center gap-6 mt-2">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="systemEnhancement"
-                      checked={editedIssue.systemEnhancement === "yes"}
-                      onChange={(e) =>
-                        handleChange("systemEnhancement", e.target.checked ? "yes" : "no")
-                      }
-                      className="accent-red-600"
-                    />
-                    <Label htmlFor="systemEnhancement">System Enhancement</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="processImprovement"
-                      checked={editedIssue.processImprovement === "yes"}
-                      onChange={(e) =>
-                        handleChange("processImprovement", e.target.checked ? "yes" : "no")
-                      }
-                      className="accent-red-600"
-                    />
-                    <Label htmlFor="processImprovement">Process Improvement</Label>
-                  </div>
+                <div className="grid grid-cols-2 gap-0">
+                  <Field label="Status">
+                    <Select value={editedIssue.status} onValueChange={(v) => handleChange("status", v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="investigating">Investigating</SelectItem>
+                        <SelectItem value="resolving">Resolving</SelectItem>
+                        <SelectItem value="monitoring">Monitoring</SelectItem>
+                        <SelectItem value="closed">Closed</SelectItem>
+                        {/* <SelectItem value="resolved">Resolved</SelectItem> */}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                    <div className="flex items-center gap-6 mt-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="systemEnhancement"
+                          checked={editedIssue.systemEnhancement === "yes"}
+                          onChange={(e) =>
+                            handleChange("systemEnhancement", e.target.checked ? "yes" : "no")
+                          }
+                          className="accent-red-600"
+                        />
+                        <Label htmlFor="systemEnhancement">System Enhancement</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="processImprovement"
+                          checked={editedIssue.processImprovement === "yes"}
+                          onChange={(e) =>
+                            handleChange("processImprovement", e.target.checked ? "yes" : "no")
+                          }
+                          className="accent-red-600"
+                        />
+                        <Label htmlFor="processImprovement">Process Improvement</Label>
+                      </div>
+                    </div>
                 </div>
 
                 <div className="flex justify-end items-end gap-3">
@@ -269,14 +278,14 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                       </SelectContent>
                     </Select>
                   </Field>
-                <Field label="Recurring">
-                  <Select value={editedIssue.isRecurring || "No"} onValueChange={(v) => handleChange("isRecurring", v)}>                    <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Yes">Yes</SelectItem>
-                      <SelectItem value="No">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
+                  <Field label="Recurring">
+                    <Select value={editedIssue.isRecurring || "No"} onValueChange={(v) => handleChange("isRecurring", v)}>                    <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Yes">Yes</SelectItem>
+                        <SelectItem value="No">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
                 </div>
               </div>
               <Field label="Description">
@@ -325,9 +334,26 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 <Textarea value={editedIssue.extraRemarks || ""} onChange={(e) => handleChange("extraRemarks", e.target.value)} rows={4} />
             </Section>
 
-            <Section title="System Enhancement / Process Improvement Notes">
-                <Textarea value={editedIssue.systemEnhancementNotes || ""} onChange={(e) => handleChange("systemEnhancementNotes", e.target.value)} rows={4} />
-            </Section>
+            {editedIssue.systemEnhancement === "yes" && (
+              <Section title="System Enhancement Notes">
+                <Textarea
+                  value={editedIssue.systemEnhancementNotes || ""}
+                  onChange={(e) => handleChange("systemEnhancementNotes", e.target.value)}
+                  rows={4}
+                />
+              </Section>
+            )}
+
+            {editedIssue.processImprovement === "yes" && (
+              <Section title="Process Improvement Notes">
+                <Textarea
+                  value={editedIssue.processImprovementNotes || ""}
+                  onChange={(e) => handleChange("processImprovementNotes", e.target.value)}
+                  rows={4}
+                />
+              </Section>
+            )}
+
             <Section title="Add Media">
               <div>
                 <Label className="font-semibold">Add Media</Label>
@@ -446,7 +472,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   <span>{new Date(editedIssue.createdAt).toLocaleDateString("en-GB")}</span>
                 </div>
 
-                {/* Picked Up - set when status changes from 'new' to 'in_progress' */}
+                {/* Picked Up - set when status changes from 'new' to 'investigating' */}
                 <div className="flex items-center text-sm text-gray-600 gap-x-2">
                   <GitMerge className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">Picked Up:</span>
@@ -457,7 +483,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   </span>
                 </div>
 
-                {/* Assigned - set when status changes from 'in_progress' to 'cleansing' */}
+                {/* Assigned - set when status changes from 'investigating' to 'resolving' */}
                 <div className="flex items-center text-sm text-gray-600 gap-x-2">
                   <GitPullRequestArrowIcon className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">Assigned:</span>
@@ -516,7 +542,17 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 <div className="grid grid-cols-2 gap-4">
                     <Field label="Reported"><Input type="number" value={editedIssue.reportedRecordTotal || ""} onChange={(e) => handleChange("reportedRecordTotal", parseInt(e.target.value))} /></Field>
                     <Field label="Impacted"><Input type="number" value={editedIssue.impactedRecordTotal || ""} onChange={(e) => handleChange("impactedRecordTotal", parseInt(e.target.value))} /></Field>
-                    <Field label="Cleansed"><Input type="number" value={editedIssue.cleansedRecordTotal || ""} onChange={(e) => handleChange("cleansedRecordTotal", parseInt(e.target.value))} /></Field>
+                    <Field label="Cleansed">
+                      <Input
+                        type="number"
+                        value={editedIssue.cleansedRecordTotal || ""}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value)
+                          const max = editedIssue.impactedRecordTotal || 0
+                          handleChange("cleansedRecordTotal", Math.min(val, max))
+                        }}
+                      />
+                    </Field>
                     <Field label="Excluded"><Input type="number" value={editedIssue.excludedRecordTotal || ""} onChange={(e) => handleChange("excludedRecordTotal", parseInt(e.target.value))} /></Field>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-4">
@@ -526,9 +562,46 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 <div className="mt-4">
                   <Progress value={percentCleansedValue} className="h-3 [&>*]:bg-green-500" />
                 </div>
-            </Section>          </div>
-        </div>
+            </Section>
 
+          {(editedIssue.systemEnhancement === "yes" || editedIssue.processImprovement === "yes") && (
+            <Section title="Enhancement & Improvement Scores">
+              {editedIssue.systemEnhancement === "yes" && (
+                <Field label="System Enhancement Score">
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      value={[editedIssue.systemEnhancementScore ?? 0]}
+                      onValueChange={([val]) => handleChange("systemEnhancementScore", val)}
+                      max={100}
+                      step={1}
+                    />
+                    <span className="w-10 text-right text-sm text-gray-700">
+                      {editedIssue.systemEnhancementScore ?? 0}
+                    </span>
+                  </div>
+                </Field>
+              )}
+                {editedIssue.processImprovement === "yes" && (
+                  <Field label="Process Improvement Score">
+                    <div className="flex items-center gap-4">
+                      <Slider
+                        value={[editedIssue.processImprovementScore ?? 0]}
+                        onValueChange={([val]) => handleChange("processImprovementScore", val)}
+                        max={100}
+                        step={1}
+                      />
+                      <span className="w-10 text-right text-sm text-gray-700">
+                        {editedIssue.processImprovementScore ?? 0}
+                      </span>
+                    </div>
+                  </Field>
+                )}
+            </Section>
+          )}
+
+
+          </div>
+        </div>
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="outline">Cancel</Button>

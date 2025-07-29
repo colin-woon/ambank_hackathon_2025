@@ -64,13 +64,14 @@ export interface Issue {
   percentTotal?: string            // e.g. "25%"
 
   systemEnhancement?: "yes" | "no"
-  processImprovement?: "yes" | "no"
   systemEnhancementScore?: number
+  processImprovement?: "yes" | "no"
   processImprovementScore?: number
 
   // Notes & Remarks
   extraRemarks?: string
   systemEnhancementNotes?: string
+  processImprovementNotes?: string
 
   // AI Co-Pilot
   aiSuggestions?: {
