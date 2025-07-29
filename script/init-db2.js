@@ -7,7 +7,7 @@ const path = require('path');
 const serviceAccountKeyPath = './serviceAccountKeyFirebase.json';
 
 // 2. ENSURE this path points to the 'sample_issues_20.json' file you downloaded.
-const sampleDataPath = './sample_issues.json'; 
+const sampleDataPath = './sample-issues.json';
 // -------------------
 
 
@@ -60,7 +60,7 @@ async function populateDatabase() {
 
     const collectionRef = db.collection('issues');
     const batchSize = 10;
-    
+
     for (let i = 0; i < sampleIssues.length; i += batchSize) {
         const batch = db.batch();
         const chunk = sampleIssues.slice(i, i + batchSize);
@@ -79,10 +79,10 @@ async function populateDatabase() {
                 deadline: toTimestamp(issue.deadline),
                 targetDeadline: toTimestamp(issue.targetDeadline),
             };
-            
+
             batch.set(docRef, firestoreDoc);
         }
-        
+
         await batch.commit();
         console.log(`Batch ${i/batchSize + 1} committed.`);
     }
