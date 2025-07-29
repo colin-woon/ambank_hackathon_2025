@@ -19,32 +19,45 @@ export default function HomePage() {
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchIssues = async () => {
-      const issuesCollection = collection(firestore, "issues")
-      const issueSnapshot = await getDocs(issuesCollection)
-      const issuesList = issueSnapshot.docs.map((doc) => {
-        const data = doc.data()
-        const convertTimestamp = (timestamp: any) => {
-          if (timestamp instanceof Timestamp) return timestamp.toDate()
-          if (typeof timestamp === "string") return new Date(timestamp)
-          return new Date()
-        }
+      try {
+        const issuesCollection = collection(firestore, "issues");
+        const issueSnapshot = await getDocs(issuesCollection);
+        const issuesList = issueSnapshot.docs.map(doc => {
+          const data = doc.data();
+          // Convert Firestore Timestamps to JS Date objects
+          const convertTimestamp = (timestamp: any) => {
+            if (timestamp instanceof Timestamp) {
+              return timestamp.toDate();
+            }
+            // Handle date strings
+            if (typeof timestamp === 'string') {
+              return new Date(timestamp);
+            }
+            return new Date(); // Fallback for undefined or null dates
+          };
 
-        return {
-          ...data,
-          id: doc.id,
-          createdAt: convertTimestamp(data.createdAt),
-          deadline: convertTimestamp(data.deadline),
-          assignedAt: data.assignedAt ? convertTimestamp(data.assignedAt) : new Date(),
-        } as Issue
-      })
-      setIssues(issuesList)
-    }
+          return {
+            ...data,
+            id: doc.id,
+            createdAt: convertTimestamp(data.createdAt),
+            deadline: convertTimestamp(data.deadline),
+            assignedAt: data.assignedAt ? convertTimestamp(data.assignedAt) : new Date(),
+          } as Issue;
+        });
+        setIssues(issuesList);
+      } catch (error) {
+        console.error("Error fetching issues:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchIssues();
+  }, []);
 
-    fetchIssues()
-  }, [])
 
   const handleCreateIssue = (newIssue: Omit<Issue, "id" | "createdAt">) => {
     const issue: Issue = {
@@ -104,9 +117,16 @@ export default function HomePage() {
         </header>
 
         <main className="py-8">
-          <TabsContent value="Home" className="px-4 sm:px-6 lg:px-8">
-            <HomeDashboard issues={issues} />
-          </TabsContent>
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center pt-50">
+              <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-red-600"></div>
+              <p className="mt-4 text-lg text-gray-700">Loading Issues...</p>
+            </div>
+          ) : (
+            <>
+            <TabsContent value="Home" className="px-4 sm:px-6 lg:px-8">
+              <HomeDashboard issues={issues} onIssueClick={handleIssueClick}/>
+            </TabsContent>
 
           <TabsContent value="table">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -123,6 +143,8 @@ export default function HomePage() {
               />
             </div>
           </TabsContent>
+            </>
+          )}
         </main>
       </Tabs>
 
