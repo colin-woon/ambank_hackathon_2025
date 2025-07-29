@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Issue } from "@/types/issue" // Adjust this import based on your file structure
+import { Issue } from "@/types/issue"
 
 interface PriorityScoreCardProps {
   editedIssue: Issue
@@ -15,7 +15,6 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
 
   const handleCalculatePriority = async () => {
     setLoading(true)
-
     try {
       const response = await fetch("http://localhost:8000/suggest-priority-score", {
         method: "POST",
@@ -45,13 +44,34 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
           suggestedPriority: data.priority
         }
       })
-
     } catch (error) {
       console.error("Error calculating priority score:", error)
     } finally {
       setLoading(false)
     }
   }
+
+  const handleScoreChange = (field: "impactScore" | "complexityScore", value: number) => {
+    const otherField = field === "impactScore" ? "complexityScore" : "impactScore"
+    const otherValue = editedIssue.aiSuggestions?.[otherField] || 0
+
+    setEditedIssue({
+      ...editedIssue,
+      aiSuggestions: {
+        ...editedIssue.aiSuggestions,
+        [field]: value,
+        totalScore: value + otherValue
+      }
+    })
+  }
+
+  const getSuggestedPriority = (impact: number | undefined): string => {
+    if (impact === undefined) return "N/A"
+    if (impact >= 5) return "High"
+    if (impact >= 3) return "Medium"
+    return "Low"
+  }
+
 
   return (
     <div className="space-y-4">
@@ -65,11 +85,29 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
 
       <div className="flex justify-around text-center p-2 bg-white rounded-lg">
         <div>
-          <div className="text-2xl font-bold text-blue-600">{editedIssue.aiSuggestions?.impactScore ?? 0}</div>
+          <input
+            type="number"
+            min="0"
+            max="6"
+            value={editedIssue.aiSuggestions?.impactScore ?? 0}
+            onChange={(e) =>
+              handleScoreChange("impactScore", Math.min(6, Math.max(0, parseInt(e.target.value) || 0)))
+            }
+            className="text-3xl font-bold text-blue-600 w-20 text-center bg-transparent border-none outline-none"
+          />
           <div className="text-xs text-gray-500">Impact Score</div>
         </div>
         <div>
-          <div className="text-2xl font-bold text-purple-600">{editedIssue.aiSuggestions?.complexityScore ?? 0}</div>
+          <input
+            type="number"
+            min="0"
+            max="12"
+            value={editedIssue.aiSuggestions?.complexityScore ?? 0}
+            onChange={(e) =>
+              handleScoreChange("complexityScore", Math.min(12, Math.max(0, parseInt(e.target.value) || 0)))
+            }
+            className="text-3xl font-bold text-purple-600 w-20 text-center bg-transparent border-none outline-none"
+          />
           <div className="text-xs text-gray-500">Complexity Score</div>
         </div>
       </div>
@@ -80,13 +118,14 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
       </div>
 
       <div className="text-center p-3 bg-orange-100 text-orange-700 rounded-lg font-semibold">
-        {editedIssue.aiSuggestions?.suggestedPriority || "N/A"}
+        {/* {editedIssue.aiSuggestions?.suggestedPriority || "N/A"} */}
+        {getSuggestedPriority(editedIssue.aiSuggestions?.impactScore)}
         <div className="text-xs font-normal">Suggested Priority</div>
       </div>
 
       <div className="flex items-center text-sm text-yellow-600 p-2 bg-yellow-50 rounded-md">
         <AlertCircle className="w-4 h-4 mr-2" />
-        Priority score calculation might take a few moments.
+        You can edit the scores after AI analysis.
       </div>
     </div>
   )
