@@ -58,7 +58,10 @@ export interface Issue {
   percentTotal?: string            // e.g. "25%"
 
   systemEnhancement?: "yes" | "no"
+  systemEnhancementScore?: number
   processImprovement?: "yes" | "no"
+  processImprovementScore?: number
+
 
   // Notes & Remarks
   extraRemarks?: string

@@ -578,9 +578,50 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 <div className="mt-4">
                   <Progress value={percentCleansedValue} className="h-3 [&>*]:bg-green-500" />
                 </div>
-            </Section>          </div>
-        </div>
+            </Section>
+          </div>
+            <Section title="Enhancement & Improvement Scores">
+              <Field label="System Enhancement Score">
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min={0}
+                    max={10}
+                    step={1}
+                    value={editedIssue.systemEnhancementScore || 0}
+                    onChange={(e) =>
+                      handleChange("systemEnhancementScore", parseInt(e.target.value))
+                    }
+                    className="w-full"
+                  />
+                  <span className="w-10 text-right text-sm text-gray-700">
+                    {editedIssue.systemEnhancementScore ?? 0}
+                  </span>
+                </div>
+              </Field>
 
+              <Field label="Process Improvement Score">
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min={0}
+                    max={10}
+                    step={1}
+                    value={editedIssue.processImprovementScore || 0}
+                    onChange={(e) =>
+                      handleChange("processImprovementScore", parseInt(e.target.value))
+                    }
+                    className="w-full"
+                  />
+                  <span className="w-10 text-right text-sm text-gray-700">
+                    {editedIssue.processImprovementScore ?? 0}
+                  </span>
+                </div>
+              </Field>
+            </Section>
+
+
+        </div>
         <DialogFooter>
           <DialogClose asChild>
             <Button type="button" variant="outline">Cancel</Button>
