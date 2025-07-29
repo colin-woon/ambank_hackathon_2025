@@ -22,11 +22,9 @@ Issue Description: {request.description}
 Impacted Report/Area: {request.impacted_report_area}
 Critical Field (CDE): {"Yes" if request.is_critical_cde else "No"}
 DQ Issue Category: {request.dq_issue_category}
-Problem Category: {request.problem_category}
 Impacted Field: {request.impacted_field}
 Root Cause Category: {request.rca_category}
 Root Cause Details: {request.rca_details}
-Resolution Category: {request.resolution_category}
 Impacted Record Total: {request.impacted_record_total}
 
 Based on the following rules:

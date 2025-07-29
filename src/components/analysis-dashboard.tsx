@@ -15,7 +15,7 @@ interface AnalysisDashboardProps {
 export function AnalysisDashboard({ issues, onIssueClick, onUpdateIssue }: AnalysisDashboardProps) {
   // Filter issues for analysis stage
   const newIssues = issues.filter((issue) => issue.status === "new")
-  const investigationIssues = issues.filter((issue) => issue.status === "in_progress" && !issue.rcaCategory)
+  const investigationIssues = issues.filter((issue) => issue.status === "investigating" && !issue.rcaCategory)
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -31,7 +31,7 @@ export function AnalysisDashboard({ issues, onIssueClick, onUpdateIssue }: Analy
   }
 
   const handleMoveToInvestigation = (issue: Issue) => {
-    onUpdateIssue({ ...issue, status: "in_progress" })
+    onUpdateIssue({ ...issue, status: "investigating" })
   }
 
   const IssueCard = ({ issue, showMoveButton = false }: { issue: Issue; showMoveButton?: boolean }) => (
@@ -48,7 +48,7 @@ export function AnalysisDashboard({ issues, onIssueClick, onUpdateIssue }: Analy
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <p className="text-sm text-gray-700 mb-2 line-clamp-2">{issue.ticketTitle}</p>
+        <p className="text-sm text-gray-700 mb-2 line-clamp-2">{issue.description}</p>
         <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
           <span>{issue.requesterName}</span>
           <span>{issue.createdAt.toLocaleDateString()}</span>

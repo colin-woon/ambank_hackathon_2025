@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { AlertCircle, Bot, Calendar, CheckCircle, Clock, Cpu, GitCommit, GitMerge, HardDrive, HelpCircle, Target, XCircle } from "lucide-react"
+import { AlertCircle, Bot, Calendar, CheckCircle, Clock, Cpu, GitBranch, GitBranchIcon, GitCommit, GitCommitHorizontalIcon, GitMerge, GitPullRequest, GitPullRequestArrowIcon, HardDrive, HelpCircle, Target, XCircle } from "lucide-react"
+import { getWorkingDaysBetween, getAgingBucket } from "@/lib/utils"
 
 import DetectDuplicateButton from '@/components/duplicate-detection-button';
 import ResultsModal from '@/components/duplicate-result-modal';
@@ -55,9 +56,33 @@ const InfoField = ({ label, value, icon }: { label: string; value: string | numb
 
 export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps) {
   const [editedIssue, setEditedIssue] = useState<Issue | null>(issue)
+  const [agingDays, setAgingDays] = useState<number | null>(null);
+  const [agingMonths, setAgingMonths] = useState<number | null>(null);
+  const [agingBucket, setAgingBucket] = useState<string | null>(null);
   const [result, setResult] = useState<DuplicateDetectionResponse | null>(null);
   const [error, setError] = useState<string>('');
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (!editedIssue?.assignedAt) {
+      setAgingDays(null);
+      setAgingMonths(null);
+      setAgingBucket(null);
+      return;
+    }
+
+    const now = new Date();
+    const assigned = new Date(editedIssue.assignedAt);
+
+    const days = getWorkingDaysBetween(assigned, now);
+    const months =
+      (now.getFullYear() - assigned.getFullYear()) * 12 +
+      now.getMonth() - assigned.getMonth();
+
+    setAgingDays(days);
+    setAgingMonths(months);
+    setAgingBucket(getAgingBucket(months));
+  }, [editedIssue?.assignedAt]);
 
   const handleResult = (newResult: DuplicateDetectionResponse) => {
     setResult(newResult);
@@ -76,6 +101,12 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     setEditedIssue(issue)
   }, [issue])
 
+    useEffect(() => {
+    if (!isOpen && issue) {
+      setEditedIssue(issue)
+    }
+  }, [isOpen, issue])
+
   const handleChange = (field: keyof Issue, value: any) => {
     if (editedIssue) {
       setEditedIssue({ ...editedIssue, [field]: value })
@@ -89,35 +120,32 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     }
   }
 
-  const { agingDays, agingMonths, agingBucket, outstanding, percentCleansed, percentCleansedValue } = useMemo(() => {
-    if (!issue)
+  const { outstanding, percentCleansed, percentCleansedValue } = useMemo(() => {
+    if (!editedIssue)
       return {
-        agingDays: 0,
-        agingMonths: 0,
-        agingBucket: "N/A",
         outstanding: 0,
-        percentCleansed: "0.00%",
+        percentCleansed: "0%",
         percentCleansedValue: 0,
       }
 
-    const now = new Date()
-    const created = new Date(issue.createdAt)
-    const days = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24))
-    const months = Math.floor(days / 30)
-    let bucket = "0-30 days"
-    if (days > 90) bucket = "90+ days"
-    else if (days > 60) bucket = "61-90 days"
-    else if (days > 30) bucket = "31-60 days"
+    const impacted = editedIssue.impactedRecordTotal || 0
+    const cleansed = editedIssue.cleansedRecordTotal || 0
+    const excluded = editedIssue.excludedRecordTotal || 0
 
-    const impacted = issue.impactedRecordTotal || 0
-    const cleansed = issue.cleansedRecordTotal || 0
-    const excluded = issue.excludedRecordTotal || 0
-    const out = impacted - cleansed - excluded
-    const percentValue = impacted > 0 ? (cleansed / impacted) * 100 : 0
-    const perc = percentValue.toFixed(0) + "%"
+    const outstanding = impacted - cleansed - excluded
+    const percentCleansedValue = impacted > 0 ? ((impacted - outstanding) / impacted) * 100 : 0
+    const percentCleansed = percentCleansedValue.toFixed(0) + "%"
 
-    return { agingDays: days, agingMonths: months, agingBucket: bucket, outstanding: out, percentCleansed: perc, percentCleansedValue: percentValue }
-  }, [issue])
+    return {
+      outstanding,
+      percentCleansed,
+      percentCleansedValue,
+    }
+  }, [
+    editedIssue?.impactedRecordTotal,
+    editedIssue?.cleansedRecordTotal,
+    editedIssue?.excludedRecordTotal,
+  ])
 
   if (!isOpen || !editedIssue) return null
 
@@ -128,7 +156,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
           <DialogTitle className="flex items-center justify-between pr-6">
             <div className="flex items-center gap-3 text-xl">
               <span className="text-red-600">{editedIssue.id}</span>
-              <span className="text-gray-700 font-medium">{editedIssue.ticketTitle}</span>
+              <span className="text-gray-700 font-medium">{editedIssue.description}</span>
             </div>
             <div className="flex items-center gap-4">
               <Badge variant={editedIssue.priority === "High" ? "destructive" : "secondary"}>{editedIssue.priority}</Badge>
@@ -151,11 +179,12 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="investigating">Investigating</SelectItem>
                       <SelectItem value="cleansing">Cleansing</SelectItem>
                       <SelectItem value="enhancing">Enhancing</SelectItem>
                       <SelectItem value="monitoring">Monitoring</SelectItem>
                       <SelectItem value="closed">Closed</SelectItem>
+                      <SelectItem value="resolved">Resolved</SelectItem>
                     </SelectContent>
                   </Select>
                 </Field>
@@ -209,10 +238,10 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     </SelectContent>
                   </Select>
                 </Field>
+                <Field label="Issue Category"><Input value={editedIssue.dqIssueCategory || ""} onChange={(e) => handleChange("dqIssueCategory", e.target.value)} /></Field>
                 <Field label="Issue Field"><Input value={editedIssue.issueField || ""} onChange={(e) => handleChange("issueField", e.target.value)} /></Field>
-                <Field label="DQ Issue Category"><Input value={editedIssue.dqIssueCategory || ""} onChange={(e) => handleChange("dqIssueCategory", e.target.value)} /></Field>
-                <Field label="Problem Category"><Input value={editedIssue.problemCategory || ""} onChange={(e) => handleChange("problemCategory", e.target.value)} /></Field>
                 <Field label="RCA Category"><Input value={editedIssue.rcaCategory || ""} onChange={(e) => handleChange("rcaCategory", e.target.value)} /></Field>
+                <Field label="RCA Details"><Input value={editedIssue.rcaDetails || ""} onChange={(e) => handleChange("rcaDetails", e.target.value)} /></Field>
                 <div className="col-span-2">
                   <Field label="RCA Details"><Textarea value={editedIssue.rcaDetails || ""} onChange={(e) => handleChange("rcaDetails", e.target.value)} /></Field>
                 </div>
@@ -237,11 +266,39 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
               {/* <Button className="w-full bg-red-600 hover:bg-red-700">Calculate Priority Score</Button>
               <div className="flex justify-around text-center p-2 bg-white rounded-lg">
                 <div>
-                  <div className="text-2xl font-bold text-blue-600">{editedIssue.aiSuggestions?.impactScore || 0}</div>
+                  <input
+                    type="number"
+                    min="0"
+                    max="6"
+                    value={editedIssue.aiSuggestions?.impactScore || 0}
+                    onChange={(e) => {
+                      const value = Math.min(6, Math.max(0, parseInt(e.target.value) || 0));
+                      handleChange("aiSuggestions", {
+                        ...editedIssue.aiSuggestions,
+                        impactScore: value,
+                        totalScore: value + (editedIssue.aiSuggestions?.complexityScore || 0)
+                      });
+                    }}
+                    className="text-3xl font-bold text-blue-600 w-20 text-center bg-transparent border-none outline-none"
+                  />
                   <div className="text-xs text-gray-500">Impact Score</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-purple-600">{editedIssue.aiSuggestions?.complexityScore || 0}</div>
+                  <input
+                    type="number"
+                    min="0"
+                    max="12"
+                    value={editedIssue.aiSuggestions?.complexityScore || 0}
+                    onChange={(e) => {
+                      const value = Math.min(12, Math.max(0, parseInt(e.target.value) || 0));
+                      handleChange("aiSuggestions", {
+                        ...editedIssue.aiSuggestions,
+                        complexityScore: value,
+                        totalScore: value + (editedIssue.aiSuggestions?.impactScore || 0)
+                      });
+                    }}
+                    className="text-3xl font-bold text-purple-600 w-20 text-center bg-transparent border-none outline-none"
+                  />
                   <div className="text-xs text-gray-500">Complexity Score</div>
                 </div>
               </div>
@@ -258,7 +315,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 Priority score calculation might take a few moments.
               </div> */}
               <PriorityScoreCard editedIssue={editedIssue} setEditedIssue={setEditedIssue} />
-              
+
               <DetectDuplicateButton
                 issueId={editedIssue.id}
                 issueDescription={editedIssue.description}
@@ -283,19 +340,103 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
             </Section>
 
             <Section title="Assignment & Timeline" icon={<Clock className="text-red-600" />}>
-                <Field label="Data Quality PIC"><Input value={editedIssue.dqPicUid || ""} onChange={(e) => handleChange("dqPicUid", e.target.value)} placeholder="Assign DQ PIC" /></Field>
-                <Field label="Data Steward PIC"><Input value={editedIssue.dsPicUid || ""} onChange={(e) => handleChange("dsPicUid", e.target.value)} placeholder="Assign Data Steward PIC" /></Field>
-                <Field label="IT PIC"><Input value={editedIssue.itPicUid || ""} onChange={(e) => handleChange("itPicUid", e.target.value)} placeholder="Assign IT PIC" /></Field>
-                <div className="space-y-2 pt-2 border-t mt-4">
-                    <InfoField label="Created" value={new Date(editedIssue.createdAt).toLocaleDateString()} icon={<GitCommit />} />
-                    <InfoField label="Picked Up" value={editedIssue.pickedUpAt ? new Date(editedIssue.pickedUpAt).toLocaleDateString() : "N/A"} icon={<GitMerge />} />
-                    <InfoField label="Resolved" value={editedIssue.resolvedAt ? new Date(editedIssue.resolvedAt).toLocaleDateString() : "N/A"} icon={<CheckCircle />} />
-                    <InfoField label="Completed" value={editedIssue.completedAt ? new Date(editedIssue.completedAt).toLocaleDateString() : "N/A"} icon={<XCircle />} />
-                    <InfoField label="Aging Days" value={agingDays} icon={<Calendar />} />
-                    <InfoField label="Aging Months" value={agingMonths} icon={<Calendar />} />
-                    <InfoField label="Aging Bucket" value={agingBucket} icon={<HelpCircle />} />
+              <Field label="Data Quality PIC">
+                <Input
+                  value={editedIssue.dqPicUid || ""}
+                  onChange={(e) => handleChange("dqPicUid", e.target.value)}
+                  placeholder="Assign DQ PIC"
+                />
+              </Field>
+
+              <Field label="Data Steward PIC">
+                <Input
+                  value={editedIssue.dsPicUid || ""}
+                  onChange={(e) => handleChange("dsPicUid", e.target.value)}
+                  placeholder="Assign Data Steward PIC"
+                />
+              </Field>
+
+              <Field label="IT PIC">
+                <Input
+                  value={editedIssue.itPicUid || ""}
+                  onChange={(e) => handleChange("itPicUid", e.target.value)}
+                  placeholder="Assign IT PIC"
+                />
+              </Field>
+
+              <div className="space-y-2 pt-2 border-t mt-4">
+                {/* Created - set once when created */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <GitCommit className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Created:</span>
+                  <span>{new Date(editedIssue.createdAt).toLocaleDateString("en-GB")}</span>
                 </div>
+
+                {/* Picked Up - set when status changes from 'new' to 'in_progress' */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <GitMerge className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Picked Up:</span>
+                  <span>
+                    {editedIssue.pickedUpAt
+                      ? new Date(editedIssue.pickedUpAt).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </span>
+                </div>
+
+                {/* Assigned - set when status changes from 'in_progress' to 'cleansing' */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <GitPullRequestArrowIcon className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Assigned:</span>
+                  <span>
+                    {editedIssue.assignedAt
+                      ? new Date(editedIssue.assignedAt).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </span>
+                </div>
+
+                {/* Completed - set when status changes to 'closed' */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <XCircle className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Completed:</span>
+                  <span>
+                    {editedIssue.completedAt
+                      ? new Date(editedIssue.completedAt).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </span>
+                </div>
+
+                {/* Resolved - set when status changes to 'resolved' */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <CheckCircle className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Resolved:</span>
+                  <span>
+                    {editedIssue.resolvedAt
+                      ? new Date(editedIssue.resolvedAt).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </span>
+                </div>
+
+                {/* Aging Info - derived from assignedAt */}
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <Calendar className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Aging Days:</span>
+                  <span>{agingDays ?? "N/A"}</span>
+                </div>
+
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <Calendar className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Aging Months:</span>
+                  <span>{agingMonths ?? "N/A"}</span>
+                </div>
+
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <HelpCircle className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Aging Bucket:</span>
+                  <span>{agingBucket ?? "N/A"}</span>
+                </div>
+              </div>
             </Section>
+
 
             <Section title="Cleansing Statistics" icon={<HardDrive className="text-red-600" />}>
                 <div className="grid grid-cols-2 gap-4">

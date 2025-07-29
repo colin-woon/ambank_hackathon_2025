@@ -28,7 +28,7 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
     () =>
       issues.filter((issue) => {
         const matchesSearch =
-          issue.ticketTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          issue.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
           issue.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
           issue.requesterName.toLowerCase().includes(searchTerm.toLowerCase())
         const matchesStatus = statusFilter === "all" || issue.status === statusFilter
@@ -159,11 +159,11 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
               <SortableHeader sortKey="id">Ticket ID</SortableHeader>
               <SortableHeader sortKey="status">Status</SortableHeader>
               <SortableHeader sortKey="priority">Priority</SortableHeader>
-              <SortableHeader sortKey="ticketTitle">Title</SortableHeader>
-              <SortableHeader sortKey="impactedArea">Area</SortableHeader>
-              <SortableHeader sortKey="createdAt">Created Date</SortableHeader>
+              <SortableHeader sortKey="description">Description</SortableHeader>
+              <SortableHeader sortKey="impactedArea">Impacted Area</SortableHeader>
+              <SortableHeader sortKey="pickedUpAt">Pickup Date</SortableHeader>
               <SortableHeader sortKey="deadline">Deadline</SortableHeader>
-              <SortableHeader sortKey="requesterName">Aging Months</SortableHeader>
+              <SortableHeader sortKey="agingMonths">Aging Months</SortableHeader>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -182,11 +182,22 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
                 <TableCell>
                   <Badge className={getPriorityColor(issue.priority)}>{issue.priority}</Badge>
                 </TableCell>
-                <TableCell className="max-w-xs truncate">{issue.ticketTitle}</TableCell>
-                <TableCell>{issue.impactedArea}</TableCell>
+                <TableCell
+                  className="max-w-xs truncate whitespace-nowrap overflow-hidden text-ellipsis"
+                  title={issue.description}
+                >
+                  {issue.description}
+                </TableCell>
+                <TableCell
+                  className="max-w-[120px] truncate whitespace-nowrap overflow-hidden text-ellipsis"
+                  title={issue.impactedArea}
+                >
+                  {issue.impactedArea}
+                </TableCell>
+
                 <TableCell>{issue.createdAt.toLocaleDateString()}</TableCell>
                 <TableCell>{issue.deadline.toLocaleDateString()}</TableCell>
-                <TableCell>{issue.requesterName}</TableCell>
+                <TableCell>{issue.agingDays}</TableCell>
               </TableRow>
             ))}
           </TableBody>

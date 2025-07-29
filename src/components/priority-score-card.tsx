@@ -25,11 +25,9 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
           impacted_report_area: editedIssue.impactedArea,
           is_critical_cde: editedIssue.criticalDataElement === "Yes",
           dq_issue_category: editedIssue.dqIssueCategory || "",
-          problem_category: editedIssue.problemCategory || "",
           impacted_field: editedIssue.issueField || "",
           rca_category: editedIssue.rcaCategory || "",
           rca_details: editedIssue.rcaDetails || "",
-          resolution_category: editedIssue.resolutionCategory || "",
           impacted_record_total: editedIssue.impactedRecordTotal || 0
         })
       })
