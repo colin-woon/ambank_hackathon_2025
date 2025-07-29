@@ -45,19 +45,32 @@ Return only this JSON:
             prompt = self.build_prompt(request)
 
             logger.info("Calling Gemini to score issue priority...")
-            response = self.client.generate_content(
-                contents=[{"role": "user", "parts": [prompt]}],
-                generation_config=types.GenerationConfig(temperature=0.2)
+            response = self.client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(temperature=0)
             )
             raw_text = response.text.strip()
 
-            # Parse response JSON manually
+            logger.info(f"Raw response text: {raw_text}")
+
             import json
-            parsed = json.loads(raw_text)
+            import re
+            # Remove markdown formatting
+            cleaned = re.sub(r"^```json|^```|```$", "", raw_text, flags=re.MULTILINE).strip()
+
+            try:
+                parsed = json.loads(cleaned)
+                print(parsed)
+            except Exception as e:
+                logger.error(f"JSON parsing failed. Cleaned text: {cleaned}")
+                raise e
+
             impact = int(parsed["impact_score"])
             complexity = int(parsed["complexity_score"])
             total = impact + complexity
 
+            print(impact, complexity, total)
             sla, priority = self.map_score_to_priority(total)
 
             return PriorityScoreResponse(

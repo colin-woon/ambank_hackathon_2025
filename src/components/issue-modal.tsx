@@ -17,6 +17,7 @@ import ResultsModal from '@/components/duplicate-result-modal';
 import { DuplicateDetectionResponse } from '@/types/duplicate-detection';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
+import PriorityScoreCard from "./priority-score-card"
 
 interface IssueModalProps {
   issue: Issue | null
@@ -233,7 +234,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
           {/* Right Column */}
           <div className="col-span-1 space-y-4">
             <Section title="AI Co-Pilot" icon={<Bot className="text-red-600" />}>
-              <Button className="w-full bg-red-600 hover:bg-red-700">Calculate Priority Score</Button>
+              {/* <Button className="w-full bg-red-600 hover:bg-red-700">Calculate Priority Score</Button>
               <div className="flex justify-around text-center p-2 bg-white rounded-lg">
                 <div>
                   <div className="text-2xl font-bold text-blue-600">{editedIssue.aiSuggestions?.impactScore || 0}</div>
@@ -255,8 +256,9 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
               <div className="flex items-center text-sm text-yellow-600 p-2 bg-yellow-50 rounded-md">
                 <AlertCircle className="w-4 h-4 mr-2" />
                 Priority score calculation might take a few moments.
-              </div>
-
+              </div> */}
+              <PriorityScoreCard editedIssue={editedIssue} setEditedIssue={setEditedIssue} />
+              
               <DetectDuplicateButton
                 issueId={editedIssue.id}
                 issueDescription={editedIssue.description}
@@ -277,7 +279,7 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 onClose={closeModal}
                 result={result}
               />
-              
+
             </Section>
 
             <Section title="Assignment & Timeline" icon={<Clock className="text-red-600" />}>
