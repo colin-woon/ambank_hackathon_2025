@@ -15,7 +15,7 @@ interface AnalysisDashboardProps {
 export function AnalysisDashboard({ issues, onIssueClick, onUpdateIssue }: AnalysisDashboardProps) {
   // Filter issues for analysis stage
   const newIssues = issues.filter((issue) => issue.status === "new")
-  const investigationIssues = issues.filter((issue) => issue.status === "investigating" && !issue.rcaCategory)
+  const investigationIssues = issues.filter((issue) => issue.status === "investigating")
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
