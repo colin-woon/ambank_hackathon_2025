@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import PriorityScoreCard from "./priority-score-card"
 import { UploadButton } from "../lib/uploadthing"
+import SendEmailButton from "./send-email-button"
 
 interface IssueModalProps {
   issue: Issue | null
@@ -502,6 +503,8 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 onClose={closeModal}
                 result={result}
               />
+
+              <SendEmailButton issue={editedIssue} onSuccess={() => alert("Email sent successfully!")} onError={(err) => setError(err)} />
 
             </Section>
 

@@ -244,15 +244,13 @@ export function IssueTable({ issues, onIssueClick }: IssueTableProps) {
                     ) : "N/A"}
                 </TableCell>
                 <TableCell>
-                  {issue.deadline ?
-                    (issue.deadline instanceof Date ?
-                      issue.deadline.toLocaleDateString() :
-                  {issue.deadline ?
-                    (issue.deadline instanceof Date ?
-                      issue.deadline.toLocaleDateString("en-GB") :
-                      // Handle Firestore timestamp
+                  {issue.deadline ? (
+                    issue.deadline instanceof Date ? (
+                      issue.deadline.toLocaleDateString("en-GB")
+                    ) : (
                       new Date(issue.deadline.seconds * 1000).toLocaleDateString("en-GB")
-                    ) : "N/A"}
+                    )
+                  ) : "N/A"}
                 </TableCell>
                 <TableCell>
                   {issue.agingDays || "N/A"}
