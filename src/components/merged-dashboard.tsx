@@ -1,5 +1,7 @@
 "use client"
 
+import { doc, updateDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 import type { Issue } from "@/types/issue"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
@@ -94,7 +96,7 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
     }
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     setActiveIssue(null)
     if (!over || active.id === over.id) return
@@ -103,11 +105,34 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
     if (!draggedIssue) return
 
     const newStatus = over.id as Issue["status"]
-    if (draggedIssue.status !== newStatus) {
-      const updated = { ...draggedIssue, status: newStatus }
-      if (newStatus === "monitoring") updated.completedAt = new Date()
-      if (newStatus === "resolved") updated.resolvedAt = new Date()
-      onUpdateIssue(updated)
+    if (draggedIssue.status === newStatus) return
+
+    const updated: Issue = {
+      ...draggedIssue,
+      status: newStatus,
+      updatedAt: new Date(),
+      ...(newStatus === "investigating" ? { pickedUpAt: new Date() } : {}),
+      ...(newStatus === "resolving" ? { assignedAt: new Date() } : {}),
+      ...(newStatus === "monitoring" ? { completedAt: new Date() } : {}),
+      ...(newStatus === "closed" ? { resolvedAt: new Date() } : {}),
+    }
+
+    // Local state update
+    onUpdateIssue(updated)
+
+    // Firestore update
+    try {
+      const ref = doc(db, "issues", draggedIssue.id)
+      await updateDoc(ref, {
+        status: newStatus,
+        updatedAt: updated.updatedAt,
+        ...(updated.pickedUpAt && { pickedUpAt: updated.pickedUpAt }),
+        ...(updated.assignedAt && { assignedAt: updated.assignedAt }),
+        ...(updated.completedAt && { completedAt: updated.completedAt }),
+        ...(updated.resolvedAt && { resolvedAt: updated.resolvedAt }),
+      })
+    } catch (err) {
+      console.error("Failed to update status:", err)
     }
   }
 
@@ -125,8 +150,8 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
       <CardContent className="pt-0">
         <p className="text-sm text-gray-700 mb-2 line-clamp-2">{issue.description}</p>
         <div className="flex justify-between text-xs text-gray-500 mb-2">
-          <span>{issue.dsPicUid ?? issue.requesterName}</span>
-          <span>{issue.createdAt?.toLocaleDateString?.() ?? issue.assignedAt?.toLocaleDateString?.() ?? "N/A"}</span>
+          <span>{issue.dsPicUid ?? issue.dqPicUid}</span>
+          <span>{issue.updatedAt?.toLocaleDateString?.() ?? "N/A"}</span>
         </div>
 
         {(issue.status === "resolving" || issue.status === "monitoring") && issue.impactedRecordTotal && (

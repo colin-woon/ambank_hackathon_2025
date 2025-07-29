@@ -140,22 +140,30 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
 
 
   const handleSaveChanges = async () => {
-    if (!editedIssue) return
+    if (!editedIssue) return;
+
+    const updatedAt = new Date();
 
     try {
-      const issueRef = doc(db, "issues", editedIssue.id)
+      const issueRef = doc(db, "issues", editedIssue.id);
       await updateDoc(issueRef, {
         ...editedIssue,
-        updatedAt: new Date(),
-      })
+        updatedAt,
+      });
 
-      onUpdate(editedIssue)
-      onClose()
+      const updatedIssue = {
+        ...editedIssue,
+        updatedAt,
+      };
+
+      onUpdate(updatedIssue); // Pass the updated object with updatedAt
+      onClose();
     } catch (error) {
-      console.error("Error saving issue:", error)
-      alert("Failed to save changes. Please try again.")
+      console.error("Error saving issue:", error);
+      alert("Failed to save changes. Please try again.");
     }
   }
+
 
 
 
@@ -584,6 +592,16 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                   <HelpCircle className="w-4 h-4 text-gray-500" />
                   <span className="font-medium">Aging Bucket:</span>
                   <span>{agingBucket ?? "N/A"}</span>
+                </div>
+
+                <div className="flex items-center text-sm text-gray-600 gap-x-2">
+                  <HelpCircle className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Updated At:</span>
+                  <span>
+                    {editedIssue.updatedAt
+                      ? new Date(editedIssue.updatedAt).toLocaleDateString("en-GB")
+                      : "N/A"}
+                  </span>
                 </div>
               </div>
             </Section>

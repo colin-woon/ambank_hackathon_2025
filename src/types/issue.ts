@@ -30,13 +30,21 @@ export interface Issue {
   dsPicUid?: string
 
   // Timestamps
+  // Timestamp Dictionary
+  // Created At: new ticket creation date
+  // Picked Up At: ticket picked up and being investigated date
+  // Assigned At: Date that ticket is sent to Data Steward to resolve
+  // Completed At: Date that data is completely cleansed and sent to monitor
+  // Resolved At: 3 months after monitoring and no change nor similar issue and considered closed
+  // Deadline: deadline
+  // Updated At: date that ticket is updated or changes status
   createdAt: Date
   pickedUpAt?: Date
   assignedAt?: Date
-  resolvedAt?: Date
   completedAt?: Date
+  resolvedAt?: Date
   deadline: Date
-  updatedAt: Date
+  updatedAt?: Date
 
   // Aging Info
   agingDays?: number
