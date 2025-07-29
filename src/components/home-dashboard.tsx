@@ -18,12 +18,6 @@ export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
     return acc
   }, {} as Record<Issue["status"], number>)
 
-  const statusChartData = Object.entries(statusCounts).map(([status, total], index) => ({
-    status,
-    total,
-    fill: `var(--chart-${index + 1})`,
-  }))
-
   const statusChartConfig = {
     total: {
       label: "Total",
@@ -49,6 +43,12 @@ export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
       color: "#b8b8b8",
     },
   } satisfies ChartConfig
+
+  const statusChartData = Object.entries(statusCounts).map(([status, total]) => ({
+    status,
+    total,
+    fill: statusChartConfig[status as keyof typeof statusChartConfig]?.color || `var(--chart-1)`,
+  }))
 
   const now = new Date();
   const urgentFollowUps = issues

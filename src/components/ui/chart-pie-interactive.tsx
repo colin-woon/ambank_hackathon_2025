@@ -80,7 +80,7 @@ export function ChartPieInteractive({
           <CardTitle>{title}</CardTitle>
           <CardDescription className="lg:text-2xl">{description}</CardDescription>
         </div>
-         <div className="grid grid-cols-2 gap-10 place-items-center pt-5">
+         <div className="grid grid-cols-2 gap-10 place-items-center pt-15">
           {data
             .filter((item) => item[nameKey] !== "closed")
             .map((item) => {
