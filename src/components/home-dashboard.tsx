@@ -99,7 +99,7 @@ export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
             <AgingPriorityBubble issues={issues} />
           </CardContent>
         </Card>
-        
+
         {/* Row 2 */}
         <Card>
           <CardHeader>
@@ -112,7 +112,7 @@ export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
             <RcaSystemBar issues={issues} />
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Impact vs. Effort Matrix</CardTitle>
@@ -124,31 +124,7 @@ export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
             <ImpactEffortBubble issues={issues} />
           </CardContent>
         </Card>
-        
-        {/* Row 3 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recurring Issues Resolution</CardTitle>
-            <CardDescription>
-              How effectively we're addressing recurring vs. one-time issues
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RecurringResolutionChart issues={issues} />
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>AI vs. Human Priority Comparison</CardTitle>
-            <CardDescription>
-              Highlights discrepancies between AI-suggested and human-assigned priorities
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PriorityHeatmap issues={issues} />
-          </CardContent>
-        </Card>
+
       </div>
 
       {/* Near Deadline Follow-ups */}
@@ -158,8 +134,8 @@ export function HomeDashboard({ issues, onIssueClick }: HomeDashboardProps) {
         </CardHeader>
         <CardContent className="flex justify-around items-center pt-4">
           {urgentFollowUps.map((item) => (
-            <div 
-              key={item.id} 
+            <div
+              key={item.id}
               className="text-center cursor-pointer hover:bg-red-50 rounded-lg p-2 transition-colors"
               onClick={() => onIssueClick(item)}
             >
