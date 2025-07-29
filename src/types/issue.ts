@@ -92,6 +92,6 @@ export interface Issue {
   // Working days calculation (based on totalScore)
   workingDays?: number
 
-  // Uploaded Media from UploadThing
-  mediaUrls?: string[]
+  // Uploaded Media already defined at the top
+  // mediaUrls?: string[]
 }

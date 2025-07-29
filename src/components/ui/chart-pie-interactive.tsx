@@ -80,7 +80,7 @@ export function ChartPieInteractive({
           <CardTitle>{title}</CardTitle>
           <CardDescription className="lg:text-2xl">{description}</CardDescription>
         </div>
-         <div className="grid grid-cols-2 gap-10 place-items-center pt-15">
+         <div className="grid grid-cols-4 gap-10 place-items-center pt-5 -mb-60">
           {data
             .filter((item) => item[nameKey] !== "closed")
             .map((item) => {
@@ -98,11 +98,11 @@ export function ChartPieInteractive({
                     separator=","
                     direction="up"
                     duration={2}
-                    className="count-up-text lg:text-8xl font-bold"
+                    className="count-up-text lg:text-5xl font-bold"
                     style={{ color }}
                   />
                   <p
-                    className={`font-bold lg:text-4xl capitalize`}
+                    className={`font-bold lg:text-2xl capitalize`}
                     style={{ color }}
                   >
                     {label}
