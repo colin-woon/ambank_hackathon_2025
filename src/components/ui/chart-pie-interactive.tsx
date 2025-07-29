@@ -80,15 +80,16 @@ export function ChartPieInteractive({
           <CardTitle>{title}</CardTitle>
           <CardDescription className="lg:text-2xl">{description}</CardDescription>
         </div>
-         <div className="grid grid-cols-4 gap-10 place-items-center pt-5 -mb-60">
-          {data
-            .filter((item) => item[nameKey] !== "closed")
-            .map((item) => {
-              const status = item[nameKey];
-              const value = item[dataKey];
-              const config = chartConfig[status] || {};
-              const label = config.label || status.replace(/_/g, " ");
-              const color = config.color;
+         <div className="grid lg:grid-cols-[1fr_1fr_1fr_1fr] grid-cols-4 lg:gap-5 place-items-center pt-5 -mb-5 w-full overflow-x-auto">
+            {["new", "investigating", "resolving", "monitoring"]
+              .map((status) => data.find((item) => item[nameKey] === status))
+              .filter(Boolean)
+              .map((item) => {
+                const status = item[nameKey];
+                const value = item[dataKey];
+                const config = chartConfig[status] || {};
+                const label = config.label || status.replace(/_/g, " ");
+                const color = config.color;
 
               return (
                 <div key={status} className="flex flex-col items-center">
@@ -98,11 +99,11 @@ export function ChartPieInteractive({
                     separator=","
                     direction="up"
                     duration={2}
-                    className="count-up-text lg:text-5xl font-bold"
+                    className="count-up-text lg:text-4xl md:text-xl font-bold"
                     style={{ color }}
                   />
                   <p
-                    className={`font-bold lg:text-2xl capitalize`}
+                    className={`font-bold lg:text-m capitalize`}
                     style={{ color }}
                   >
                     {label}
@@ -110,6 +111,7 @@ export function ChartPieInteractive({
                 </div>
               );
             })}
+
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 items-center justify-center pb-0">
