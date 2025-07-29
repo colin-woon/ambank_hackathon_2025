@@ -159,7 +159,9 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     const excluded = editedIssue.excludedRecordTotal || 0
 
     const outstanding = impacted - cleansed - excluded
-    const percentCleansedValue = impacted > 0 ? ((impacted - outstanding) / impacted) * 100 : 0
+    const percentCleansedValue = impacted > 0
+      ? Math.min(100, ((impacted - outstanding) / impacted) * 100)
+      : 0
     const percentCleansed = percentCleansedValue.toFixed(0) + "%"
 
     return {
@@ -518,7 +520,17 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 <div className="grid grid-cols-2 gap-4">
                     <Field label="Reported"><Input type="number" value={editedIssue.reportedRecordTotal || ""} onChange={(e) => handleChange("reportedRecordTotal", parseInt(e.target.value))} /></Field>
                     <Field label="Impacted"><Input type="number" value={editedIssue.impactedRecordTotal || ""} onChange={(e) => handleChange("impactedRecordTotal", parseInt(e.target.value))} /></Field>
-                    <Field label="Cleansed"><Input type="number" value={editedIssue.cleansedRecordTotal || ""} onChange={(e) => handleChange("cleansedRecordTotal", parseInt(e.target.value))} /></Field>
+                    <Field label="Cleansed">
+                      <Input
+                        type="number"
+                        value={editedIssue.cleansedRecordTotal || ""}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value)
+                          const max = editedIssue.impactedRecordTotal || 0
+                          handleChange("cleansedRecordTotal", Math.min(val, max))
+                        }}
+                      />
+                    </Field>
                     <Field label="Excluded"><Input type="number" value={editedIssue.excludedRecordTotal || ""} onChange={(e) => handleChange("excludedRecordTotal", parseInt(e.target.value))} /></Field>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-4">
