@@ -61,7 +61,7 @@ Return only this JSON:
 
             try:
                 parsed = json.loads(cleaned)
-                print(parsed)
+                # print(parsed)
             except Exception as e:
                 logger.error(f"JSON parsing failed. Cleaned text: {cleaned}")
                 raise e
@@ -70,8 +70,8 @@ Return only this JSON:
             complexity = int(parsed["complexity_score"])
             total = impact + complexity
 
-            print(impact, complexity, total)
-            sla, priority = self.map_score_to_priority(total)
+            sla = self.map_score_to_sla(total)
+            priority = self.map_impact_to_priority(impact)
 
             return PriorityScoreResponse(
                 impact_score=impact,
@@ -85,14 +85,23 @@ Return only this JSON:
             logger.error(f"Error getting priority score: {str(e)}")
             raise HTTPException(status_code=500, detail=f"Priority scoring failed: {str(e)}")
 
-    def map_score_to_priority(self, total: int):
-        if total <= 4:
-            return "15WD", "Low"
-        elif total <= 8:
-            return "30WD", "Low-Medium"
-        elif total <= 12:
-            return "60WD", "Medium"
-        elif total <= 15:
-            return "90WD", "High"
+    def map_impact_to_priority(self, impact: int) -> str:
+        if impact >= 5:
+            return "High"
+        elif impact >= 3:
+            return "Medium"
         else:
-            return "120WD", "Very High"
+            return "Low"
+
+    def map_score_to_sla(self, total: int) -> str:
+        if total <= 4:
+            return "15WD"
+        elif total <= 8:
+            return "30WD"
+        elif total <= 12:
+            return "60WD"
+        elif total <= 15:
+            return "90WD"
+        else:
+            return "120WD"
+
