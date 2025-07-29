@@ -21,9 +21,7 @@ interface CreateIssueModalProps {
 
 export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModalProps) {
   const [formData, setFormData] = useState({
-    ticketTitle: "",
     description: "",
-    priority: "Medium" as Issue["priority"],
     requesterName: "",
     requesterContact: "",
     requesterDepartment: "",
@@ -71,9 +69,7 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
 
     // Reset form
     setFormData({
-      ticketTitle: "",
       description: "",
-      priority: "Medium",
       requesterName: "",
       requesterContact: "",
       requesterDepartment: "",
@@ -94,16 +90,6 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
-              <Label htmlFor="title">Issue Title *</Label>
-              <Input
-                id="title"
-                value={formData.ticketTitle}
-                onChange={(e) => handleInputChange("ticketTitle", e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="md:col-span-2">
               <Label htmlFor="description">Description *</Label>
               <Textarea
                 id="description"
@@ -113,24 +99,6 @@ export function CreateIssueModal({ isOpen, onClose, onSubmit }: CreateIssueModal
                 required
               />
             </div>
-
-            <div>
-              <Label htmlFor="priority">Priority</Label>
-              <Select
-                value={formData.priority}
-                onValueChange={(value: Issue["priority"]) => handleInputChange("priority", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="High">High</SelectItem>
-                  <SelectItem value="Medium">Medium</SelectItem>
-                  <SelectItem value="Low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             <div>
               <Label htmlFor="requesterName">Requester Name *</Label>
               <Input

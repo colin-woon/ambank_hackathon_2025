@@ -15,13 +15,12 @@ interface ResolutionDashboardProps {
 export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: ResolutionDashboardProps) {
   // Filter issues for resolution stage based on resolution category
   const cleansingIssues = issues.filter(
-    (issue) => issue.status === "in_progress" && issue.resolutionCategory === "Manual Data Cleansing",
+    (issue) => issue.status === "cleansing"
   )
 
   const enhancingIssues = issues.filter(
     (issue) =>
-      issue.status === "in_progress" &&
-      (issue.resolutionCategory === "Software Improvement" || issue.resolutionCategory === "Process Improvement"),
+      issue.status === "enhancing"
   )
 
   const monitoringIssues = issues.filter((issue) => issue.status === "monitoring")
@@ -40,11 +39,23 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
   }
 
   const handleStatusChange = (issue: Issue, newStatus: Issue["status"]) => {
-    onUpdateIssue({ ...issue, status: newStatus })
+    const updatedIssue: Issue = {
+      ...issue,
+      ...(newStatus !== "resolved" ? { status: newStatus } : {}),
+      resolvedAt: newStatus === "resolved" ? new Date() : issue.resolvedAt,
+    }
+    onUpdateIssue(updatedIssue)
   }
 
+
   const handleMoveToMonitoring = (issue: Issue) => {
-    onUpdateIssue({ ...issue, status: "monitoring" })
+    const now = new Date()
+    const updatedIssue: Issue = {
+      ...issue,
+      status: "monitoring",
+      completedAt: now, // ✅ Set completedAt when moving to monitoring
+    }
+    onUpdateIssue(updatedIssue)
   }
 
   const IssueCard = ({
@@ -69,23 +80,14 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <p className="text-sm text-gray-700 mb-2 line-clamp-2">{issue.ticketTitle}</p>
+        <p className="text-sm text-gray-700 mb-2 line-clamp-2">{issue.description}</p>
         <div className="flex justify-between items-center text-xs text-gray-500 mb-2">
-          <span>{issue.requesterName}</span>
-          <span>{issue.createdAt.toLocaleDateString()}</span>
+          <span>{issue.dsPicUid}</span>
+          <span>{issue.assignedAt.toLocaleDateString()}</span>
         </div>
 
-        {/* Show resolution category if available */}
-        {issue.resolutionCategory && (
-          <div className="mb-2">
-            <Badge variant="secondary" className="text-xs">
-              {issue.resolutionCategory}
-            </Badge>
-          </div>
-        )}
-
         {/* Show cleansing progress for cleansing issues */}
-        {issue.resolutionCategory === "Manual Data Cleansing" && issue.impactedRecordTotal && (
+        {issue.impactedRecordTotal && (
           <div className="mb-2">
             <div className="text-xs text-gray-600 mb-1">
               Progress: {Math.round(((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}%
@@ -124,7 +126,7 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
               className="flex-1 text-green-700 border-green-300 hover:bg-green-50 bg-transparent"
               onClick={(e) => {
                 e.stopPropagation()
-                handleStatusChange(issue, "closed")
+                handleStatusChange(issue, "closed") // remove from monitoring
               }}
             >
               <CheckCircle className="w-3 h-3 mr-1" />
@@ -133,20 +135,31 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
             <Button
               size="sm"
               variant="outline"
-              className="flex-1 text-red-700 border-red-300 hover:bg-red-50 bg-transparent"
+              className="flex-1 text-blue-700 border-blue-300 hover:bg-blue-50 bg-transparent"
               onClick={(e) => {
                 e.stopPropagation()
-                handleStatusChange(issue, "rejected")
+                handleStatusChange(issue, "resolved") // stays in monitoring
               }}
             >
-              <XCircle className="w-3 h-3 mr-1" />
-              Reject
+              <CheckCircle className="w-3 h-3 mr-1" />
+              Resolve
             </Button>
           </div>
         )}
+
       </CardContent>
     </Card>
   )
+
+  const isMoreThan3MonthsOld = (date?: string | Date) => {
+    if (!date) return false
+    const completed = new Date(date)
+    const now = new Date()
+    const diffMonths = (now.getFullYear() - completed.getFullYear()) * 12 + (now.getMonth() - completed.getMonth())
+    return diffMonths >= 3
+  }
+
+
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -199,8 +212,13 @@ export function ResolutionDashboard({ issues, onIssueClick, onUpdateIssue }: Res
         <div className="bg-purple-50 rounded-lg p-4 min-h-96 border-2 border-purple-200">
           <div className="mb-4 text-sm text-purple-700 font-medium">Solutions under monitoring and validation</div>
           {monitoringIssues.map((issue) => (
-            <IssueCard key={issue.id} issue={issue} showMonitoringActions={true} />
+            <IssueCard
+              key={issue.id}
+              issue={issue}
+              showMonitoringActions={isMoreThan3MonthsOld(issue.completedAt)}
+            />
           ))}
+
           {monitoringIssues.length === 0 && (
             <div className="text-center text-gray-500 py-8">No issues being monitored</div>
           )}

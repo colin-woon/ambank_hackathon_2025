@@ -1,9 +1,8 @@
 export interface Issue {
   // Core Details
   id: string
-  ticketTitle: string
   description: string
-  priority: "High" | "Medium" | "Low"
+  priority: "Super High" | "High" | "Medium" | "Low"
   mediaAttachments: string[]
 
   // Requester & Source Info
@@ -19,7 +18,7 @@ export interface Issue {
   suggestedResolution?: string
 
   // Status & Assignment
-  status: "new" | "in_progress" | "monitoring" | "closed" | "rejected" | "cleansing"
+  status: "new" | "monitoring" | "closed" | "rejected" | "cleansing" | "investigating" | "enhancing" | "resolved"
   createdByUid: string
   dqPicUid?: string
   dsPicUid?: string
@@ -27,19 +26,23 @@ export interface Issue {
 
   // Timestamps
   createdAt: Date
-  assignedAt?: Date
   pickedUpAt?: Date
+  assignedAt?: Date
   resolvedAt?: Date
   completedAt?: Date
   deadline: Date
 
-  // Key Issue Classification
+  // Aging Info
+  agingDays?: number
+  agingMonths?: number
+  agingBucket?: "0-6 months" | "7-18 months" | ">18 months"
+
+  // Issue Classification
   dataClass?: string
   criticalDataElement?: "Yes" | "No"
   dqIssueCategory?: string
   issueField?: string
-  problemCategory?: string 
-  isRecurring?: string
+  isRecurring?: boolean
 
   // RCA & Impact
   rcaCategory?: string
@@ -47,22 +50,25 @@ export interface Issue {
   impactAnalysis?: string
 
   // Resolution Summary & Metrics
-  resolutionCategory?: string
   reportedRecordTotal?: number
   impactedRecordTotal?: number
   cleansedRecordTotal?: number
   excludedRecordTotal?: number
-  outstandingRecordTotal?: number // This will be calculated
+  outstandingRecordTotal?: number // Should be derived (reported - cleansed - excluded)
+  percentTotal?: string            // e.g. "25%"
 
   // Notes & Remarks
   extraRemarks?: string
   systemEnhancementNotes?: string
 
-  // AI Co-Pilot Generated Fields
+  // AI Co-Pilot
   aiSuggestions?: {
     impactScore: number
     complexityScore: number
     totalScore: number
-    suggestedPriority: string
+    suggestedPriority: "High" | "Medium" | "Low"
   }
+
+  // Working days calculation (based on totalScore)
+  workingDays?: number
 }
