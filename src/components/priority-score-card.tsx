@@ -13,6 +13,19 @@ interface PriorityScoreCardProps {
 export default function PriorityScoreCard({ editedIssue, setEditedIssue }: PriorityScoreCardProps) {
   const [loading, setLoading] = useState(false)
 
+  const addWorkingDays = (startDate: Date, workingDays: number): Date => {
+    const result = new Date(startDate)
+    let added = 0
+    while (added < workingDays) {
+      result.setDate(result.getDate() + 1)
+      // Skip weekends
+      if (result.getDay() !== 0 && result.getDay() !== 6) {
+        added++
+      }
+    }
+    return result
+  }
+
   const handleCalculatePriority = async () => {
     setLoading(true)
     try {
@@ -38,6 +51,8 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
 
       console.log("working days", data.workingDays)
 
+      const pickedUp = editedIssue.pickedUpAt ? new Date(editedIssue.pickedUpAt) : new Date()
+
       setEditedIssue({
         ...editedIssue,
         aiSuggestions: {
@@ -46,8 +61,10 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
           totalScore: data.total_score,
           suggestedPriority: data.priority
         },
-        workingDays: data.sla
+        workingDays: data.sla,
+        deadline: addWorkingDays(pickedUp, parseInt(data.sla))  // <--- add this
       })
+
     } catch (error) {
       console.error("Error calculating priority score:", error)
     } finally {
@@ -57,15 +74,25 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
 
   // const handleScoreChange = (field: "impactScore" | "complexityScore", value: number) => {
   //   const otherField = field === "impactScore" ? "complexityScore" : "impactScore"
-  //   const otherValue = editedIssue.aiSuggestions?.[otherField] || 0
+  //   const otherValue = editedIssue.aiSuggestions?.[otherField] ?? 0
+  //   const newTotal = value + otherValue
+
+  //   const calculateWorkingDays = (total: number): number => {
+  //     if (total <= 4) return 15
+  //     if (total <= 8) return 30
+  //     if (total <= 12) return 60
+  //     if (total <= 15) return 90
+  //     return 120
+  //   }
 
   //   setEditedIssue({
   //     ...editedIssue,
   //     aiSuggestions: {
   //       ...editedIssue.aiSuggestions,
   //       [field]: value,
-  //       totalScore: value + otherValue
-  //     }
+  //       totalScore: newTotal
+  //     },
+  //     workingDays: calculateWorkingDays(newTotal),
   //   })
   // }
 
@@ -74,13 +101,17 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
     const otherValue = editedIssue.aiSuggestions?.[otherField] ?? 0
     const newTotal = value + otherValue
 
-    const calculateWorkingDays = (total: number): string => {
-      if (total <= 4) return "15WD"
-      if (total <= 8) return "30WD"
-      if (total <= 12) return "60WD"
-      if (total <= 15) return "90WD"
-      return "120WD"
+    const calculateWorkingDays = (total: number): number => {
+      if (total <= 4) return 15
+      if (total <= 8) return 30
+      if (total <= 12) return 60
+      if (total <= 15) return 90
+      return 120
     }
+
+    const workingDays = calculateWorkingDays(newTotal)
+    const pickedUp = editedIssue.pickedUpAt ? new Date(editedIssue.pickedUpAt) : new Date()
+    const newDeadline = addWorkingDays(pickedUp, workingDays)
 
     setEditedIssue({
       ...editedIssue,
@@ -89,10 +120,10 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
         [field]: value,
         totalScore: newTotal
       },
-      workingDays: calculateWorkingDays(newTotal)
+      workingDays,
+      deadline: newDeadline
     })
   }
-
 
   const getSuggestedPriority = (impact: number | undefined): string => {
     if (impact === undefined) return "N/A"
@@ -144,7 +175,7 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
       <div className="text-center p-2 bg-white rounded-lg">
         <div className="text-3xl font-bold text-gray-800">{editedIssue.aiSuggestions?.totalScore ?? 0}</div>
         <div className="text-xs text-gray-500">Total Score</div>
-        <div className="text-m text-gray-500">({editedIssue.workingDays})</div>
+        <div className="text-m text-gray-500">({editedIssue.workingDays} WD)</div>
 
       </div>
 
