@@ -24,17 +24,22 @@ type ImpactEffortProps = {
 export const ImpactEffortBubble = ({ issues, onIssueClick }: ImpactEffortProps) => {
   // Filter valid issues with both impacted records and working days
   const filteredIssues = issues.filter(
-    (issue) => issue.impactedRecordTotal && issue.workingDays
+    (issue) =>
+      issue.impactedRecordTotal !== undefined &&
+      issue.workingDays !== undefined &&
+      issue.impactedRecordTotal !== null &&
+      issue.workingDays !== null
   );
 
   // Transform data for the chart
   const chartData = filteredIssues.map((issue) => ({
     id: issue.id,
-    x: issue.workingDays || 0, // Effort
-    y: issue.impactedRecordTotal || 0, // Impact
+    x: Number(issue.workingDays) || 0,
+    y: Number(issue.impactedRecordTotal) || 0,
     z:
-      ((issue.impactedRecordTotal || 0) * (issue.workingDays || 0)) /
-      100, // Bubble size
+      ((Number(issue.impactedRecordTotal) || 0) *
+        (Number(issue.workingDays) || 0)) /
+      100,
     priority: issue.priority,
     description:
       issue.description?.substring(0, 50) +
