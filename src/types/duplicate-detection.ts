@@ -2,6 +2,8 @@ export interface SimilarIssue {
 	ticket_id: string;
 	description: string;
 	similarity_score: number;
+	rca_category?: string
+	rca_details?: string
   }
 
   export interface DuplicateDetectionResponse {

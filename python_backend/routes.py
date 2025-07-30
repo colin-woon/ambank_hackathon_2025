@@ -9,6 +9,9 @@ from priority_score import PriorityScorer
 from models import EmailSendRequest, EmailSendResponse
 from send_email import EmailSender
 
+from models import RCAGenerationRequest, RCAGenerationResponse
+from generate_rca import RCAGenerator
+
 logger = logging.getLogger(__name__)
 
 # ========== DUPLICATE DETECTION ==========
@@ -95,3 +98,13 @@ async def send_summary_email(request: EmailSendRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# ========== RCA GENERATION ==========
+rca_generator = RCAGenerator()
+
+@router.post("/generate-rca", response_model=RCAGenerationResponse)
+async def generate_rca_handler(request: RCAGenerationRequest):
+    try:
+        result = rca_generator.generate_rca(request)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
