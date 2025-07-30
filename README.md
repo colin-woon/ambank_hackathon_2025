@@ -57,7 +57,7 @@ AmDash is a comprehensive, AI-powered platform tailored to streamline Ambank's e
 
 ## 📹 Demo Video
 
-[Link to your demo video]
+[Demo Video Drive](https://youtu.be/4RU6ZO2Y8_s)
 
 ## 📊 Presentation Deck
 
