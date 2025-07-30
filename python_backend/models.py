@@ -41,7 +41,7 @@ class PriorityScoreResponse(BaseModel):
     impact_score: int
     complexity_score: int
     total_score: int
-    sla: str
+    sla: int
     priority: str
 
 
