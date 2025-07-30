@@ -50,9 +50,9 @@ export default function ResultsModal({ isOpen, onClose, result }: ResultsModalPr
                 </>
               )}
             </DialogTitle>
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            {/* <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />
-            </Button>
+            </Button> */}
           </div>
           <DialogDescription>
             Analysis results for issue: {result.new_issue_id}
