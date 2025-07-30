@@ -91,15 +91,15 @@ Return only this JSON:
         else:
             return "Low"
 
-    def map_score_to_sla(self, total: int) -> str:
+    def map_score_to_sla(self, total: int) -> int:
         if total <= 4:
-            return "15WD"
+            return 15
         elif total <= 8:
-            return "30WD"
+            return 30
         elif total <= 12:
-            return "60WD"
+            return 60
         elif total <= 15:
-            return "90WD"
+            return 90
         else:
-            return "120WD"
+            return 120
 
