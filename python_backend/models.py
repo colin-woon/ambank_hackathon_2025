@@ -10,6 +10,8 @@ class SimilarIssue(BaseModel):
     ticket_id: str
     description: str
     similarity_score: float
+    rca_category: Optional[str]
+    rca_details: Optional[str]
 
 class DuplicateDetectionResponse(BaseModel):
     new_issue_id: str
@@ -95,3 +97,11 @@ class EmailSendRequest(BaseModel):
 class EmailSendResponse(BaseModel):
     status: str
     message: str
+
+class RCAGenerationRequest(BaseModel):
+    current_issue_description: str
+    similar_issues: List[SimilarIssue]
+
+class RCAGenerationResponse(BaseModel):
+    suggested_rca_categories: List[str]
+    explanation: Optional[str] = None

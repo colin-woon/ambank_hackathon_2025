@@ -46,6 +46,7 @@ export default function DetectDuplicateButton({
 
       const data: DuplicateDetectionResponse = await response.json();
       onResult(data);
+      console.log('Duplicate detection result:', data);
     } catch (err) {
       onError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
