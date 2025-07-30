@@ -34,6 +34,9 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
       if (!response.ok) throw new Error("Failed to calculate priority score")
 
       const data = await response.json()
+      console.log("AI response data:", data)
+
+      console.log("working days", data.workingDays)
 
       setEditedIssue({
         ...editedIssue,
@@ -42,7 +45,8 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
           complexityScore: data.complexity_score,
           totalScore: data.total_score,
           suggestedPriority: data.priority
-        }
+        },
+        workingDays: data.sla
       })
     } catch (error) {
       console.error("Error calculating priority score:", error)
@@ -51,19 +55,44 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
     }
   }
 
+  // const handleScoreChange = (field: "impactScore" | "complexityScore", value: number) => {
+  //   const otherField = field === "impactScore" ? "complexityScore" : "impactScore"
+  //   const otherValue = editedIssue.aiSuggestions?.[otherField] || 0
+
+  //   setEditedIssue({
+  //     ...editedIssue,
+  //     aiSuggestions: {
+  //       ...editedIssue.aiSuggestions,
+  //       [field]: value,
+  //       totalScore: value + otherValue
+  //     }
+  //   })
+  // }
+
   const handleScoreChange = (field: "impactScore" | "complexityScore", value: number) => {
     const otherField = field === "impactScore" ? "complexityScore" : "impactScore"
-    const otherValue = editedIssue.aiSuggestions?.[otherField] || 0
+    const otherValue = editedIssue.aiSuggestions?.[otherField] ?? 0
+    const newTotal = value + otherValue
+
+    const calculateWorkingDays = (total: number): string => {
+      if (total <= 4) return "15WD"
+      if (total <= 8) return "30WD"
+      if (total <= 12) return "60WD"
+      if (total <= 15) return "90WD"
+      return "120WD"
+    }
 
     setEditedIssue({
       ...editedIssue,
       aiSuggestions: {
         ...editedIssue.aiSuggestions,
         [field]: value,
-        totalScore: value + otherValue
-      }
+        totalScore: newTotal
+      },
+      workingDays: calculateWorkingDays(newTotal)
     })
   }
+
 
   const getSuggestedPriority = (impact: number | undefined): string => {
     if (impact === undefined) return "N/A"
@@ -115,6 +144,8 @@ export default function PriorityScoreCard({ editedIssue, setEditedIssue }: Prior
       <div className="text-center p-2 bg-white rounded-lg">
         <div className="text-3xl font-bold text-gray-800">{editedIssue.aiSuggestions?.totalScore ?? 0}</div>
         <div className="text-xs text-gray-500">Total Score</div>
+        <div className="text-m text-gray-500">({editedIssue.workingDays})</div>
+
       </div>
 
       <div className="text-center p-3 bg-orange-100 text-orange-700 rounded-lg font-semibold">
