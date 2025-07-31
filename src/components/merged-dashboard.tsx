@@ -97,10 +97,10 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "Super High": return "border-l-red-500 bg-red-50"
-      case "High": return "border-l-orange-500 bg-orange-50"
-      case "Medium": return "border-l-yellow-500 bg-yellow-50"
-      default: return "border-l-gray-500 bg-gray-50"
+      case "Super High": return "border-l-red-500 bg-red-200"
+      case "High": return "border-l-orange-500 bg-orange-200"
+      case "Medium": return "border-l-yellow-500 bg-yellow-200"
+      default: return "border-l-gray-500 bg-gray-200"
     }
   }
 
@@ -146,13 +146,13 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
 
   const IssueCard = ({ issue }: { issue: Issue }) => (
     <Card
-      className={`cursor-pointer hover:shadow-md transition-shadow border-l-4 ${getPriorityColor(issue.priority)}`}
+      className={`cursor-pointer hover:shadow-md transition-shadow border-l-4`}
       onClick={() => onIssueClick(issue)}
     >
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-sm font-medium text-red-700">{issue.id}</CardTitle>
-          <Badge variant="outline" className="text-xs">{issue.priority}</Badge>
+          <Badge variant="outline" className={`text-xs ${getPriorityColor(issue.priority)}`} >{issue.priority}</Badge>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
