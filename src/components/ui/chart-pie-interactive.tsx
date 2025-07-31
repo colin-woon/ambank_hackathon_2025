@@ -87,7 +87,7 @@ export function ChartPieInteractive({
           <CardTitle>{title}</CardTitle>
           <CardDescription className="lg:text-2xl">{description}</CardDescription>
         </div>
-        <div className="grid lg:grid-cols-[1fr_1fr_1fr_1fr] grid-cols-4 lg:gap-5 place-items-center pt-5 -mb-5 w-full overflow-x-auto">
+        <div className="grid lg:grid-cols-[1fr_1fr_1fr_1fr] grid-cols-4 lg:gap-5 place-items-center pt-5 -mb-5 w-full">
           {["new", "investigating", "resolving", "monitoring"]
             .map((status) => data.find((item) => item[nameKey] === status))
             .filter(Boolean)
