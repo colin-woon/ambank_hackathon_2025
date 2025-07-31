@@ -16,6 +16,8 @@ import {
   useSensors,
   DragEndEvent,
   DragOverlay,
+  closestCorners,
+  rectIntersection
 } from "@dnd-kit/core"
 import { useDraggable, useDroppable } from "@dnd-kit/core"
 import { Clock, FileSearch, Wrench, Eye, CheckCircle } from "lucide-react"
@@ -204,7 +206,7 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
   )
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter}
+    <DndContext sensors={sensors} collisionDetection={rectIntersection}
       onDragStart={({ active }) => {
         const dragged = issues.find(i => i.id === active.id)
         if (dragged) setActiveIssue(dragged)
