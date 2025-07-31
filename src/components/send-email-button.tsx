@@ -18,31 +18,6 @@ export default function SendEmailButton({
 }: SendEmailButtonProps) {
   const [loading, setLoading] = useState(false)
 
-  // const handleSendEmail = async () => {
-  //   setLoading(true)
-  //   onError?.("") // clear errors
-
-  //   try {
-  //     const response = await fetch("http://localhost:8000/send-summary-email", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify(issue)
-  //     })
-
-  //     if (!response.ok) {
-  //       const errorData = await response.json()
-  //       throw new Error(errorData.detail || "Failed to send email")
-  //     }
-
-  //     onSuccess?.()
-  //     alert("Email sent to Data Steward successfully.")
-  //   } catch (err) {
-  //     onError?.(err instanceof Error ? err.message : "Unexpected error occurred")
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
-
   const handleSendEmail = async () => {
 
     const payloadToSend = {
@@ -97,7 +72,7 @@ export default function SendEmailButton({
 
     console.log("Payload to send:", payloadToSend)
 
-
+    setLoading(true)
     try {
       const response = await fetch("http://localhost:8000/send-summary-email", {
         method: "POST",
@@ -114,6 +89,8 @@ export default function SendEmailButton({
     } catch (err) {
       console.error("Send email error:", err)
       alert("Failed to send email")
+    } finally {
+      setLoading(false)
     }
   }
 
