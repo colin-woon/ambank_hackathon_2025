@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AlertTriangle, CheckCircle } from "lucide-react";
-import { DuplicateDetectionResponse } from "@/types/duplicate-detection";
+import { DuplicateDetectionResponse, RCAGenerationResponse } from "@/types/duplicate-detection";
 import GenerateRCAButton from "./generate-rca-button";
 
 interface ResultsModalProps {
@@ -31,8 +31,10 @@ interface ResultsModalProps {
   result: DuplicateDetectionResponse | null;
 }
 
+
+
 export default function ResultsModal({ isOpen, onClose, result }: ResultsModalProps) {
-  const [rcaSuggestion, setRcaSuggestion] = useState<string | null>(null);
+  const [rcaSuggestion, setRcaSuggestion] = useState<RCAGenerationResponse | null>(null);
   const [rcaError, setRcaError] = useState<string | null>(null);
 
   if (!result) return null;
@@ -139,21 +141,22 @@ export default function ResultsModal({ isOpen, onClose, result }: ResultsModalPr
                       <p className="text-gray-700 text-sm leading-relaxed">
                         {issue.description}
                       </p>
-                      <p className="text-gray-700 text-sm leading-relaxed">
+                      {/* <p className="text-gray-700 text-sm leading-relaxed">
                         <strong>RCA Category:</strong> {issue.rca_category || 'No RCA category provided.'}
                       </p>
                       <p className="text-gray-700 text-sm leading-relaxed">
                         <strong>RCA Details:</strong> {issue.rca_details || 'No additional details provided.'}
-                      </p>
+                      </p> */}
                     </div>
                   ))}
                 </div>
 
                 <div className="flex justify-end mt-6">
                   <GenerateRCAButton
+                    currentIssueDescription={result.new_issue_description}
                     similarIssues={topSimilarIssues}
-                    onResult={(text) => {
-                      setRcaSuggestion(text);
+                    onResult={(data) => {
+                      setRcaSuggestion(data);
                       setRcaError(null);
                     }}
                     onError={(msg) => {
@@ -177,7 +180,9 @@ export default function ResultsModal({ isOpen, onClose, result }: ResultsModalPr
               </CardHeader>
               <CardContent>
                 <p className="text-gray-800 whitespace-pre-wrap">
-                  {rcaSuggestion}
+                  {rcaSuggestion.rca_category}
+                  {rcaSuggestion.rca_detail}
+                  {rcaSuggestion.explanation}
                 </p>
               </CardContent>
             </Card>

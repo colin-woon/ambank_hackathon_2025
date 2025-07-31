@@ -103,5 +103,6 @@ class RCAGenerationRequest(BaseModel):
     similar_issues: List[SimilarIssue]
 
 class RCAGenerationResponse(BaseModel):
-    suggested_rca_categories: List[str]
-    explanation: Optional[str] = None
+    rca_category: str
+    rca_detail: str
+    explanation: str

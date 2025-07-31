@@ -18,17 +18,18 @@ class RCAGenerator:
 
     def build_prompt(self, request: RCAGenerationRequest) -> str:
         similar_text = "\n".join(
-            f"- ID: {issue.id}\n  Description: {issue.description}\n  RCA Category: {issue.rca_category or 'N/A'}"
+            f"-  Description: {issue.description}\n  RCA Category: {issue.rca_category or 'N/A'}"
             for issue in request.similar_issues
         )
 
         return f"""
-You are a data quality assistant. Analyze the current data issue and a list of similar past issues to suggest the most relevant root cause categories.
+You are a data quality assistant. Analyze the current data issue and a list of similar past issues to suggest the most likely root cause.
 
 Return only this JSON format:
 {{
-  "suggested_rca_categories": ["category1", "category2"],
-  "explanation": "A brief explanation of why you chose those categories"
+  "rca_category": "The most likely root cause category as a string",
+  "rca_detail": "Detailed description of the root cause",
+  "explanation": "Explanation of why you selected this root cause based on the similar issues"
 }}
 
 Current Issue Description:
@@ -41,6 +42,7 @@ Similar Past Issues:
     def generate_rca(self, request: RCAGenerationRequest) -> RCAGenerationResponse:
         try:
             prompt = self.build_prompt(request)
+            print(f"Generated prompt for RCA:\n{prompt}\n")
 
             logger.info("Calling Gemini to generate potential RCA...")
             response = self.client.models.generate_content(
@@ -62,8 +64,9 @@ Similar Past Issues:
                 raise e
 
             return RCAGenerationResponse(
-                suggested_rca_categories=parsed.get("suggested_rca_categories", []),
-                explanation=parsed.get("explanation")
+                rca_category=parsed.get("rca_category", "Unknown"),
+                rca_detail=parsed.get("rca_detail", ""),
+                explanation=parsed.get("explanation", "")
             )
 
         except Exception as e:
