@@ -52,6 +52,7 @@ export default function GenerateRCAButton({
       }
 
       const data : RCAGenerationResponse = await response.json();
+      console.log("data", data)
       onResult(data);
     } catch (error) {
       console.error("RCA Generation Error:", error);
@@ -67,7 +68,7 @@ export default function GenerateRCAButton({
     <Button
       onClick={handleGenerateRCA}
       disabled={loading || similarIssues.length === 0 || !currentIssueDescription}
-      className="w-full flex items-center gap-2"
+      className="w-full flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white"
     >
       {loading ? (
         <>
