@@ -43,17 +43,24 @@ export function ChartPieInteractive({
   id,
   unitLabel = "Total",
 }: ChartPieInteractiveProps) {
-  const [activeItem, setActiveItem] = React.useState(data[0]?.[nameKey])
+  // Filter out "closed" for Pie rendering
+  const orderedStatuses = ["new", "investigating", "resolving", "monitoring"]
+  const filteredData = data
+    .filter((item) => item[nameKey] !== "closed")
+    .sort((a, b) => orderedStatuses.indexOf(a[nameKey]) - orderedStatuses.indexOf(b[nameKey]))
+
+
+  const [activeItem, setActiveItem] = React.useState(filteredData[0]?.[nameKey])
 
   React.useEffect(() => {
-    if (data.length > 0 && activeItem === undefined) {
-      setActiveItem(data[0][nameKey])
+    if (filteredData.length > 0 && activeItem === undefined) {
+      setActiveItem(filteredData[0][nameKey])
     }
-  }, [data, activeItem, nameKey])
+  }, [filteredData, activeItem, nameKey])
 
   const activeIndex = React.useMemo(
-    () => data.findIndex((item) => item[nameKey] === activeItem),
-    [activeItem, data, nameKey]
+    () => filteredData.findIndex((item) => item[nameKey] === activeItem),
+    [activeItem, filteredData, nameKey]
   )
 
   if (data.length === 0) {
@@ -80,16 +87,16 @@ export function ChartPieInteractive({
           <CardTitle>{title}</CardTitle>
           <CardDescription className="lg:text-2xl">{description}</CardDescription>
         </div>
-         <div className="grid lg:grid-cols-[1fr_1fr_1fr_1fr] grid-cols-4 lg:gap-5 place-items-center pt-5 -mb-5 w-full overflow-x-auto">
-            {["new", "investigating", "resolving", "monitoring"]
-              .map((status) => data.find((item) => item[nameKey] === status))
-              .filter(Boolean)
-              .map((item) => {
-                const status = item[nameKey];
-                const value = item[dataKey];
-                const config = chartConfig[status] || {};
-                const label = config.label || status.replace(/_/g, " ");
-                const color = config.color;
+        <div className="grid lg:grid-cols-[1fr_1fr_1fr_1fr] grid-cols-4 lg:gap-5 place-items-center pt-5 -mb-5 w-full overflow-x-auto">
+          {["new", "investigating", "resolving", "monitoring"]
+            .map((status) => data.find((item) => item[nameKey] === status))
+            .filter(Boolean)
+            .map((item) => {
+              const status = item[nameKey]
+              const value = item[dataKey]
+              const config = chartConfig[status] || {}
+              const label = config.label || status.replace(/_/g, " ")
+              const color = config.color
 
               return (
                 <div key={status} className="flex flex-col items-center">
@@ -109,9 +116,8 @@ export function ChartPieInteractive({
                     {label}
                   </p>
                 </div>
-              );
+              )
             })}
-
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 items-center justify-center pb-0">
@@ -126,9 +132,11 @@ export function ChartPieInteractive({
               content={<ChartTooltipContent hideLabel />}
             />
             <Pie
-              data={data}
+              data={filteredData}
               dataKey={dataKey}
               nameKey={nameKey}
+              startAngle={180}
+              endAngle={-180}
               innerRadius={60}
               strokeWidth={5}
               activeIndex={activeIndex}
@@ -154,7 +162,7 @@ export function ChartPieInteractive({
               <Label
                 content={({ viewBox }) => {
                   if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                    const activeData = data[activeIndex]
+                    const activeData = filteredData[activeIndex]
                     if (!activeData) return null
                     return (
                       <text
