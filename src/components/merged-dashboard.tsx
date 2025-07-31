@@ -21,6 +21,7 @@ import {
 } from "@dnd-kit/core"
 import { useDraggable, useDroppable } from "@dnd-kit/core"
 import { Clock, FileSearch, Wrench, Eye, CheckCircle } from "lucide-react"
+import {getClampedCleansingPercent} from "../lib/utils"
 
 interface MergedDashboardProps {
   issues: Issue[]
@@ -167,7 +168,7 @@ export function MergedDashboard({ issues, onIssueClick, onUpdateIssue }: MergedD
         {(issue.status === "resolving" || issue.status === "monitoring") && issue.impactedRecordTotal && (
           <div className="mb-2">
             <div className="text-xs text-gray-600 mb-1">
-              Cleansing Progress: {Math.round(((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}%
+              Cleansing Progress: {getClampedCleansingPercent(issue)}%
             </div>
             <Progress
               value={Math.min(100, ((issue.cleansedRecordTotal || 0) / issue.impactedRecordTotal) * 100)}
