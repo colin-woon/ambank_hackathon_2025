@@ -145,25 +145,37 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
 
     const updatedAt = new Date();
 
+    const impacted = Number(editedIssue.impactedRecordTotal) || 0;
+    const cleansed = Number(editedIssue.cleansedRecordTotal) || 0;
+    const excluded = Number(editedIssue.excludedRecordTotal) || 0;
+
+    const percentCleansed = impacted > 0
+      ? ((cleansed + excluded) / impacted) * 100
+      : 0;
+
     try {
       const issueRef = doc(db, "issues", editedIssue.id);
+
       await updateDoc(issueRef, {
         ...editedIssue,
+        percentCleansed, // ✅ store it!
         updatedAt,
       });
 
       const updatedIssue = {
         ...editedIssue,
+        percentCleansed,
         updatedAt,
       };
 
-      onUpdate(updatedIssue); // Pass the updated object with updatedAt
+      onUpdate(updatedIssue); // Pass the enriched object to local state
       onClose();
     } catch (error) {
       console.error("Error saving issue:", error);
       alert("Failed to save changes. Please try again.");
     }
-  }
+  };
+
 
 
 
@@ -176,15 +188,14 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
         percentCleansedValue: 0,
       }
 
-    const impacted = editedIssue.impactedRecordTotal || 0
-    const cleansed = editedIssue.cleansedRecordTotal || 0
-    const excluded = editedIssue.excludedRecordTotal || 0
+    const outstanding = (editedIssue?.impactedRecordTotal || 0) -
+                    (editedIssue?.cleansedRecordTotal || 0) -
+                    (editedIssue?.excludedRecordTotal || 0);
 
-    const outstanding = impacted - cleansed - excluded
-    const percentCleansedValue = impacted > 0
-      ? Math.min(100, ((impacted - outstanding) / impacted) * 100)
-      : 0
-    const percentCleansed = percentCleansedValue.toFixed(0) + "%"
+    const percentCleansedValue = Number(editedIssue?.percentCleansed || 0);
+    const percentCleansed = `${percentCleansedValue.toFixed(0)}%`;
+
+
 
     return {
       outstanding,

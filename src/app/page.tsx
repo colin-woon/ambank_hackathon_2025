@@ -26,18 +26,13 @@ export default function HomePage() {
       try {
         const issuesCollection = collection(db, "issues");
         const issueSnapshot = await getDocs(issuesCollection);
+
         const issuesList = issueSnapshot.docs.map(doc => {
           const data = doc.data();
-          // Convert Firestore Timestamps to JS Date objects
           const convertTimestamp = (timestamp: any) => {
-            if (timestamp instanceof Timestamp) {
-              return timestamp.toDate();
-            }
-            // Handle date strings
-            if (typeof timestamp === 'string') {
-              return new Date(timestamp);
-            }
-            return new Date(); // Fallback for undefined or null dates
+            if (timestamp instanceof Timestamp) return timestamp.toDate();
+            if (typeof timestamp === 'string') return new Date(timestamp);
+            return new Date();
           };
 
           return {
@@ -52,13 +47,31 @@ export default function HomePage() {
             updatedAt: convertTimestamp(data.updatedAt),
           } as Issue;
         });
-        setIssues(issuesList);
+
+        // ✅ Now enrich with percentCleansed
+        const enhancedIssues = issuesList.map(issue => {
+          const impacted = Number(issue.impactedRecordTotal) || 0;
+          const cleansed = Number(issue.cleansedRecordTotal) || 0;
+          const excluded = Number(issue.excludedRecordTotal) || 0;
+
+          const percentCleansed = impacted > 0
+            ? ((cleansed + excluded) / impacted) * 100
+            : 0;
+
+          return {
+            ...issue,
+            percentCleansed,
+          };
+        });
+
+        setIssues(enhancedIssues);
       } catch (error) {
         console.error("Error fetching issues:", error);
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchIssues();
   }, []);
 

@@ -22,7 +22,6 @@ type ImpactEffortProps = {
 };
 
 export const ImpactEffortBubble = ({ issues, onIssueClick }: ImpactEffortProps) => {
-  // Filter valid issues with both impacted records and working days
   const filteredIssues = issues.filter(
     (issue) =>
       issue.impactedRecordTotal !== undefined &&
@@ -31,39 +30,39 @@ export const ImpactEffortBubble = ({ issues, onIssueClick }: ImpactEffortProps) 
       issue.workingDays !== null
   );
 
-const getEnhancementSize = (issue: Issue) => {
-  const cleaned = Number(issue.percentTotal) || 0;
-  const process = issue.processImprovement === "yes" ? 100 : 0;
-  const system = issue.systemEnhancement === "yes" ? 100 : 0;
+  const getEnhancementSize = (issue: Issue) => {
+    const cleansed = Number(issue.percentCleansed) || 0;
+    const system = issue.systemEnhancement === "yes" ? Number(issue.systemEnhancementScore) || 0 : 0;
+    const process = issue.processImprovement === "yes" ? Number(issue.processImprovementScore) || 0 : 0;
 
-  const totalPossible = 100 + (process ? 100 : 0) + (system ? 100 : 0);
-  const actualTotal = cleaned + process + system;
+    const actualTotal = cleansed + system + process;
+    const totalPossible = 100 +
+      (issue.systemEnhancement === "yes" ? 100 : 0) +
+      (issue.processImprovement === "yes" ? 100 : 0);
 
-  const percentScore = (actualTotal / totalPossible) * 100;
+    const ratio = totalPossible > 0 ? actualTotal / totalPossible : 0;
 
-  // Convert percentage to visual size between 150–800
-  const minSize = 150;
-  const maxSize = 800;
-  return minSize + (percentScore / 100) * (maxSize - minSize);
-};
+    const minSize = 100;
+    const maxSize = 600;
+    const size = minSize + ratio * (maxSize - minSize);
 
+    return Math.max(minSize, Math.min(size, maxSize));
+  };
 
-  // Transform data for the chart
   const chartData = filteredIssues.map((issue) => ({
     id: issue.id,
     x: Number(issue.workingDays) || 0,
     y: Number(issue.impactedRecordTotal) || 0,
-    z: getEnhancementSize(issue), // Use enhancement score for bubble size
+    z: getEnhancementSize(issue),
     priority: issue.priority,
     description:
       issue.description?.substring(0, 50) +
       (issue.description?.length > 50 ? "..." : ""),
-    percentTotal: issue.percentTotal || 0,
-    processImprovement: issue.processImprovement,
-    systemEnhancement: issue.systemEnhancement,
+    percentCleansed: issue.percentCleansed ?? 0,
+    processImprovementScore: issue.processImprovementScore || 0,
+    systemEnhancementScore: issue.systemEnhancementScore || 0,
   }));
 
-  // Priority to color mapping
   const priorityColors = {
     "Super High": "#ff0000",
     High: "#ff8042",
@@ -72,40 +71,52 @@ const getEnhancementSize = (issue: Issue) => {
     "N/A": "#8884d8",
   };
 
-  // Calculate average values for reference lines
-  const avgEffort =
-    chartData.reduce((sum, item) => sum + item.x, 0) / chartData.length || 0;
-  const avgImpact =
-    chartData.reduce((sum, item) => sum + item.y, 0) / chartData.length || 0;
+  const avgEffort = chartData.reduce((sum, item) => sum + item.x, 0) / chartData.length || 0;
+  const avgImpact = chartData.reduce((sum, item) => sum + item.y, 0) / chartData.length || 0;
 
-  // Custom tooltip
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
 
-    const cleaned = Number(data.percentageTotal) || 0;
-    const process = data.processImprovement === "yes" ? 100 : 0;
-    const system = data.systemEnhancement === "yes" ? 100 : 0;
+      const process = Number(data.processImprovementScore) || 0;
+      const system = Number(data.systemEnhancementScore) || 0;
+      const cleansed = Number(data.percentCleansed) ?? 0;
 
-    const totalPossible = 100 + (process ? 100 : 0) + (system ? 100 : 0);
-    const actualTotal = cleaned + process + system;
-    const enhancementPercentage = Math.round((actualTotal / totalPossible) * 100);
+      const actualTotal = cleansed + process + system;
+      const totalPossible = 100 +
+        (data.systemEnhancementScore ? 100 : 0) +
+        (data.processImprovementScore ? 100 : 0);
 
-    return (
-      <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md max-w-xs text-sm space-y-1">
-        <p className="font-medium text-base text-gray-900">ID: {data.id}</p>
-        <p><strong>Priority:</strong> {data.priority}</p>
-        <p><strong>Effort (Working Days):</strong> {data.x}</p>
-        <p><strong>Impact (Records Affected):</strong> {data.y}</p>
-        <p><strong>Cleaned Data:</strong> {cleaned}%</p>
-        <p><strong>Process Improvement:</strong> {process ? "Yes" : "No"}</p>
-        <p><strong>System Enhancement:</strong> {system ? "Yes" : "No"}</p>
-        <p className="pt-1 text-gray-700"><strong>Description:</strong> {data.description}</p>
-      </div>
-    );
-  }
-  return null;
-};
+      const rawPercentage = (actualTotal / totalPossible) * 100;
+      const displayPercentage = rawPercentage === 100 ? 100 : Math.floor(rawPercentage);
+
+      return (
+        <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md max-w-xs text-sm space-y-1">
+          <p className="font-medium text-base text-gray-900">🆔 ID: <span className="font-mono">{data.id}</span></p>
+          <p><strong>Priority:</strong> {data.priority}</p>
+          <p><strong>Effort:</strong> {data.x} working days</p>
+          <p><strong>Impact:</strong> {data.y.toLocaleString()} records</p>
+          <p><strong>Work Done:</strong> {displayPercentage}%</p>
+          <p><strong>Breakdown:</strong></p>
+
+          <ul className="pl-4 list-disc text-gray-600">
+            <li>Cleansed: {Math.floor(cleansed)}%</li>
+            <li>System Enhancement: {Math.floor(system)}%</li>
+            <li>Process Improvement: {Math.floor(process)}%</li>
+          </ul>
+          <p className="text-gray-500 italic">
+            Bubble size ∝ (Work Done)
+          </p>
+          <div className="border-t pt-2 mt-2 text-gray-700">
+            <p><strong>Description:</strong></p>
+            <p className="text-gray-600 italic">{data.description}</p>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div className="w-full h-[400px] relative">
@@ -135,36 +146,17 @@ const CustomTooltip = ({ active, payload }: any) => {
               dy: 0,
             }}
           />
-          <ZAxis type="number" dataKey="z" range={[150, 800]} />
+          <ZAxis type="number" dataKey="z" range={[100, 600]} />
           <Tooltip content={<CustomTooltip />} />
-          <ReferenceLine
-            x={avgEffort}
-            stroke="blue"
-            strokeDasharray="5 7"
-            strokeWidth={3}
-            strokeOpacity={0.6}
-          />
-          <ReferenceLine
-            y={avgImpact}
-            stroke="blue"
-            strokeDasharray="5 7"
-            strokeWidth={3}
-            strokeOpacity={0.6}
-          />
+          <Legend verticalAlign="top" align="right" wrapperStyle={{ top: -30, left: 0, position: "absolute" }} />
+          <ReferenceLine x={avgEffort} stroke="blue" strokeDasharray="5 7" strokeWidth={3} strokeOpacity={0.6} />
+          <ReferenceLine y={avgImpact} stroke="blue" strokeDasharray="5 7" strokeWidth={3} strokeOpacity={0.6} />
 
           {/* Quadrant labels */}
-          <text x="75%" y="10%" dy={-20} textAnchor="middle" fill="blue">
-            Major Projects
-          </text>
-          <text x="30%" y="10%" dy={-20} textAnchor="middle" fill="blue">
-            Quick Wins
-          </text>
-          <text x="75%" y="90%" dy={-20} textAnchor="middle" fill="blue">
-            Fill-in Tasks
-          </text>
-          <text x="30%" y="90%" dy={-20} textAnchor="middle" fill="blue">
-            Thankless Tasks
-          </text>
+          <text x="75%" y="10%" dy={-20} textAnchor="middle" fill="blue">Major Projects</text>
+          <text x="30%" y="10%" dy={-20} textAnchor="middle" fill="blue">Quick Wins</text>
+          <text x="75%" y="90%" dy={-20} textAnchor="middle" fill="blue">Fill-in Tasks</text>
+          <text x="30%" y="90%" dy={-20} textAnchor="middle" fill="blue">Thankless Tasks</text>
 
           <Scatter name="Issues" data={chartData} fill="#8884d8">
             {chartData.map((entry, index) => {
@@ -172,11 +164,7 @@ const CustomTooltip = ({ active, payload }: any) => {
               return (
                 <Cell
                   key={`cell-${index}`}
-                  fill={
-                    priorityColors[
-                      entry.priority as keyof typeof priorityColors
-                    ] || "#8884d8"
-                  }
+                  fill={priorityColors[entry.priority as keyof typeof priorityColors] || "#8884d8"}
                   onClick={() => fullIssue && onIssueClick(fullIssue)}
                   style={{ cursor: "pointer" }}
                 />
