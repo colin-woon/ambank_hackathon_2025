@@ -3,15 +3,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Lightbulb } from "lucide-react";
-import { SimilarIssue } from "@/types/duplicate-detection";
+import { RCAGenerationResponse, SimilarIssue } from "@/types/duplicate-detection";
 
 interface GenerateRCAButtonProps {
+  currentIssueDescription: string; // Add this prop
   similarIssues: SimilarIssue[];
-  onResult: (rcaText: string) => void;
+  onResult: (rcaCategory: string, rcaDetail: string, explanation: string) => void; // Updated to match backend response
   onError: (msg: string) => void;
 }
 
 export default function GenerateRCAButton({
+  currentIssueDescription, // Add this prop
   similarIssues,
   onResult,
   onError,
@@ -24,6 +26,11 @@ export default function GenerateRCAButton({
       return;
     }
 
+    if (!currentIssueDescription) {
+      onError("Current issue description is required.");
+      return;
+    }
+
     setLoading(true);
     onError("");
 
@@ -33,7 +40,10 @@ export default function GenerateRCAButton({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ similar_issues: similarIssues }),
+        body: JSON.stringify({
+          current_issue_description: currentIssueDescription, // Add this field
+          similar_issues: similarIssues
+        }),
       });
 
       if (!response.ok) {
@@ -41,8 +51,9 @@ export default function GenerateRCAButton({
         throw new Error(errorData.detail || "Failed to generate RCA.");
       }
 
-      const data = await response.json();
-      onResult(data.rca_text || "No RCA generated.");
+      const data : RCAGenerationResponse = await response.json();
+      console.log("data", data)
+      onResult(data);
     } catch (error) {
       console.error("RCA Generation Error:", error);
       onError(
@@ -56,8 +67,8 @@ export default function GenerateRCAButton({
   return (
     <Button
       onClick={handleGenerateRCA}
-      disabled={loading || similarIssues.length === 0}
-      className="w-full flex items-center gap-2"
+      disabled={loading || similarIssues.length === 0 || !currentIssueDescription}
+      className="w-full flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white"
     >
       {loading ? (
         <>

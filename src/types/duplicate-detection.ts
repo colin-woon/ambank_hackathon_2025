@@ -13,3 +13,9 @@ export interface SimilarIssue {
 	is_duplicate: boolean;
 	duplicate_threshold: number;
   }
+
+  export interface RCAGenerationResponse {
+	rca_category: string
+	rca_detail: string
+	explanation: string
+  }
