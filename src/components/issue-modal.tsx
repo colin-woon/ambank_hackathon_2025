@@ -85,7 +85,6 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
       now.getMonth() - assigned.getMonth()
     );
 
-
     setAgingDays(days);
     setAgingMonths(months);
     setAgingBucket(getAgingBucket(months));
@@ -146,21 +145,36 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     const updatedAt = new Date();
 
     const impacted = Number(editedIssue.impactedRecordTotal) || 0;
-    const cleansed = Number(editedIssue.cleansedRecordTotal) || 0;
-    const excluded = Number(editedIssue.excludedRecordTotal) || 0;
+    let cleansed = Number(editedIssue.cleansedRecordTotal) || 0;
+    let excluded = Number(editedIssue.excludedRecordTotal) || 0;
 
-    const percentCleansed = impacted > 0
+    // ✅ Clamp to not exceed impacted
+    const maxAllowed = impacted;
+    if (cleansed + excluded > maxAllowed) {
+      const ratio = maxAllowed / (cleansed + excluded);
+      cleansed = Math.floor(cleansed * ratio);
+      excluded = Math.floor(excluded * ratio);
+    }
+
+    let percentCleansed = impacted > 0
       ? ((cleansed + excluded) / impacted) * 100
       : 0;
+
+    percentCleansed = percentCleansed === 100 ? 100 : Math.min(percentCleansed, 99);
+
+
 
     try {
       const issueRef = doc(db, "issues", editedIssue.id);
 
       await updateDoc(issueRef, {
         ...editedIssue,
-        percentCleansed, // ✅ store it!
+        cleansedRecordTotal: cleansed,
+        excludedRecordTotal: excluded,
+        percentCleansed,
         updatedAt,
       });
+
 
       const updatedIssue = {
         ...editedIssue,
@@ -176,10 +190,6 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
     }
   };
 
-
-
-
-
   const { outstanding, percentCleansed, percentCleansedValue } = useMemo(() => {
     if (!editedIssue)
       return {
@@ -192,10 +202,14 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                     (editedIssue?.cleansedRecordTotal || 0) -
                     (editedIssue?.excludedRecordTotal || 0);
 
-    const percentCleansedValue = Number(editedIssue?.percentCleansed || 0);
-    const percentCleansed = `${percentCleansedValue.toFixed(0)}%`;
+    const percentCleansedValue = Math.min(
+      Number(editedIssue.percentCleansed || 0),
+      100
+    );
 
-
+    const roundedValue =
+      percentCleansedValue === 100 ? 100 : Math.floor(percentCleansedValue);
+    const percentCleansed = `${roundedValue}%`;
 
     return {
       outstanding,
