@@ -7,7 +7,7 @@ const path = require('path');
 const serviceAccountKeyPath = './serviceAccountKeyFirebase.json';
 
 // 2. ENSURE this path points to the 'sample_issues_20.json' file you downloaded.
-const sampleDataPath = './sample-issues.json';
+const sampleDataPath = './sample-issues.v5.json';
 // -------------------
 
 

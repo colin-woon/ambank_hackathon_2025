@@ -69,7 +69,7 @@ export interface Issue {
   cleansedRecordTotal?: number
   excludedRecordTotal?: number
   outstandingRecordTotal?: number // Should be derived (reported - cleansed - excluded)
-  percentTotal?: string            // e.g. "25%"
+  percentCleansed?: number
 
   systemEnhancement?: "yes" | "no"
   systemEnhancementScore?: number
