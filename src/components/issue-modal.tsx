@@ -338,7 +338,6 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 <Field label="Issue Category"><Input value={editedIssue.dqIssueCategory || ""} onChange={(e) => handleChange("dqIssueCategory", e.target.value)} /></Field>
                 <Field label="Issue Field"><Input value={editedIssue.issueField || ""} onChange={(e) => handleChange("issueField", e.target.value)} /></Field>
                 <Field label="RCA Category"><Input value={editedIssue.rcaCategory || ""} onChange={(e) => handleChange("rcaCategory", e.target.value)} /></Field>
-                <Field label="RCA Details"><Input value={editedIssue.rcaDetails || ""} onChange={(e) => handleChange("rcaDetails", e.target.value)} /></Field>
                 <div className="col-span-2">
                   <Field label="RCA Details"><Textarea value={editedIssue.rcaDetails || ""} onChange={(e) => handleChange("rcaDetails", e.target.value)} /></Field>
                 </div>
@@ -371,45 +370,6 @@ export function IssueModal({ issue, isOpen, onClose, onUpdate }: IssueModalProps
                 />
               </Section>
             )}
-
-            <Section title="Add Media">
-              <div>
-                <Label className="font-semibold">Add Media</Label>
-                <Input
-                  type="file"
-                  multiple
-                  className="mt-1"
-                  onChange={(e) => {
-                    if (e.target.files) {
-                      const newFiles = Array.from(e.target.files)
-                      setMediaFiles((prev) => [...prev, ...newFiles])
-                    }
-                  }}
-                />
-                {mediaFiles.length > 0 && (
-                  <div className="mt-2 text-xs text-gray-600">
-                    <p className="mb-1">New Files to Upload:</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      {mediaFiles.map((file, idx) => (
-                        <li key={idx} className="flex justify-between">
-                          {file.name}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setMediaFiles((prev) => prev.filter((_, i) => i !== idx))
-                            }}
-                            className="text-red-500 text-xs hover:underline ml-2"
-                          >
-                            Remove
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </Section>
-
             <Section title="Media Attachments 📎">
               <div className="space-y-4">
                 <UploadButton
