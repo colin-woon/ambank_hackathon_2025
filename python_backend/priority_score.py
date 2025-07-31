@@ -27,9 +27,17 @@ Root Cause Category: {request.rca_category}
 Root Cause Details: {request.rca_details}
 Impacted Record Total: {request.impacted_record_total}
 
-Based on the following rules:
-- Complexity Score (1–3): based on number of systems affected, number of parties involved, validation effort, cleansing method.
-- Impact Score (1–3): based on field criticality and affected data volume.
+Calculate the total Complexity Score and total Impact Score based on the following additive rules:
+
+Complexity Score Factors (add points for each applicable factor):
+- System Affected: 1 system (1 point), 2 systems (2 points), 3+ systems (3 points)
+- People Involvement: 1 party (1 point), 2 parties (2 points), 3+ parties (3 points)
+- Data Validation Effort: No/minimal effort (1 point), Simple data validation (2 points), Complicated validation process (3 points)
+- Cleansing Method: Batch Update/Manual Update <100 records (1 point), Manual Update <500 records (2 points), Manual Update >=500 records (3 points)
+
+Impact Score Factors (add points for each applicable factor):
+- Field Criticality: Non-CDE field (1 point), CDE & optional field (2 points), CDE & mandatory field (3 points)
+- Data Volume: <5% of the base (1 point), >=5% of the base (2 points), >=20% of the base (3 points)
 
 Return only this JSON:
 {{
